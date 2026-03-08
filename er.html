@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>簡易 ER図 - Salesforce Quick Admin</title>
+    <link href="assets/output.css" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background: #4f46e5;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.05em;
+        }
+
+        #org-badge {
+            background: #3730a3;
+            border: 1px solid #6366f1;
+            border-radius: 8px;
+            padding: 4px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot-green {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #34d399;
+            flex-shrink: 0;
+        }
+
+        #controls-bar {
+            background: white;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            flex-shrink: 0;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        #controls-bar label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        #er-object-search {
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 8px 14px;
+            font-size: 14px;
+            width: 280px;
+            background: #f8fafc;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        #er-object-search:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        #btn-draw {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 9px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #btn-draw:hover {
+            background: #4338ca;
+        }
+
+        #btn-draw:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* === CANVAS === */
+        #canvas-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            cursor: grab;
+            background-color: #f1f5f9;
+            background-image:
+                radial-gradient(circle, #c7d2e7 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        #canvas-area.grabbing {
+            cursor: grabbing;
+        }
+
+        /* The infinite virtual canvas that we translate/scale */
+        #canvas-world {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-origin: 0 0;
+        }
+
+        /* SVG always covers entire world */
+        #er-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        /* === NODE CARDS === */
+        .node {
+            position: absolute;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: grab;
+            user-select: none;
+            width: 200px;
+            text-align: center;
+            padding: 12px 14px;
+            transition: box-shadow 0.2s;
+        }
+
+        .node:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+        }
+
+        .node.dragging {
+            cursor: grabbing;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            z-index: 1000 !important;
+        }
+
+        .node-center {
+            background: #4f46e5;
+            color: white;
+            border: 3px solid white;
+            box-shadow: 0 4px 20px rgba(79, 70, 229, 0.4);
+            width: 220px;
+        }
+
+        .node-parent-md {
+            background: #eef2ff;
+            border: 2px solid #818cf8;
+            color: #3730a3;
+        }
+
+        .node-parent-ref {
+            background: #f8fafc;
+            border: 2px solid #94a3b8;
+            color: #334155;
+        }
+
+        .node-child {
+            background: white;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+        }
+
+        .node-label-sm {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+            opacity: 0.75;
+        }
+
+        .node-name {
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .node-api {
+            font-size: 10px;
+            font-family: monospace;
+            margin-top: 3px;
+            opacity: 0.65;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* === LEGEND === */
+        #legend {
+            position: fixed;
+            top: 130px;
+            left: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 11px;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        #legend p {
+            margin: 0 0 6px;
+            font-weight: 700;
+            color: #475569;
+        }
+
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            color: #64748b;
+        }
+
+        /* === ZOOM CONTROLS === */
+        #zoom-controls {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            gap: 4px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+        }
+
+        #zoom-controls button {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            background: #f8fafc;
+            color: #334155;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
+
+        #zoom-controls button:hover {
+            background: #e2e8f0;
+        }
+
+        #btn-fit {
+            font-size: 11px;
+            width: auto;
+            padding: 0 8px;
+        }
+
+        /* === EMPTY STATE === */
+        #empty-state {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            color: #94a3b8;
+        }
+
+        #empty-state svg {
+            margin-bottom: 12px;
+        }
+
+        #empty-state p {
+            font-size: 15px;
+            margin: 0;
+        }
+
+        #empty-state small {
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        /* === LOADING === */
+        #loading {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid #e2e8f0;
+            border-top-color: #4f46e5;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #loading span {
+            font-size: 13px;
+            color: #4f46e5;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
+                </path>
+            </svg>
+            <h1>Salesforce Quick Admin - 簡易 ER図</h1>
+        </div>
+        <div id="org-badge">
+            <span class="dot-green"></span>
+            <span id="target-org-id">取得中...</span>
+        </div>
+    </header>
+
+    <div id="controls-bar">
+        <div>
+            <label for="er-object-search">起点オブジェクト</label>
+            <input type="text" id="er-object-search" list="er-object-list" placeholder="API名 または 表示ラベル を入力...">
+            <datalist id="er-object-list"></datalist>
+        </div>
+        <button id="btn-draw">描画する</button>
+    </div>
+
+    <!-- Legend -->
+    <div id="legend">
+        <p>凡例</p>
+        <div class="legend-row">
+            <svg width="36" height="10">
+                <path d="M0,5 L30,5" stroke="#6366f1" stroke-width="2.5" />
+                <polygon points="30,2 36,5 30,8" fill="#6366f1" />
+            </svg>
+            主従関係
+        </div>
+        <div class="legend-row">
+            <svg width="36" height="10">
+                <path d="M0,5 L30,5" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" />
+                <polygon points="30,2 36,5 30,8" fill="#94a3b8" />
+            </svg>
+            参照関係
+        </div>
+    </div>
+
+    <!-- Zoom Controls -->
+    <div id="zoom-controls">
+        <button id="btn-zoom-out" title="縮小">−</button>
+        <button id="btn-zoom-label" style="pointer-events:none;">100%</button>
+        <button id="btn-zoom-in" title="拡大">+</button>
+        <button id="btn-fit" title="全体表示">全体</button>
+        <button id="btn-reset-layout" title="レイアウトリセット">↺</button>
+    </div>
+
+    <!-- Canvas -->
+    <div id="canvas-area">
+        <!-- Empty State -->
+        <div id="empty-state">
+            <svg width="56" height="56" fill="none" stroke="#cbd5e1" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
+                </path>
+            </svg>
+            <p>上部からオブジェクトを選択して「描画する」をクリック</p>
+            <small>起点オブジェクトを中心に、親(左)・子(右)の関連を表示します</small>
+        </div>
+
+        <!-- World: this is what we scale/translate -->
+        <div id="canvas-world">
+            <svg id="er-svg">
+                <defs>
+                    <marker id="arr-solid" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                        <polygon points="0 1, 8 4, 0 7" fill="#6366f1" />
+                    </marker>
+                    <marker id="arr-dashed" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                        <polygon points="0 1, 8 4, 0 7" fill="#94a3b8" />
+                    </marker>
+                </defs>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <span id="loading-text">解析中...</span>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="er.js"></script>
+</body>
+
+</html>

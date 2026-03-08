@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Salesforce Quick Admin</title>
+  <link href="assets/output.css" rel="stylesheet">
+</head>
+
+<body class="w-[700px] h-[600px] bg-slate-50 text-slate-800 font-sans p-4 flex flex-col pt-3 overflow-hidden">
+
+  <header class="mb-3 pb-2 border-b border-slate-200 flex-shrink-0">
+    <div class="flex justify-between items-end">
+      <h1 class="text-xl font-bold tracking-tight text-blue-700 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        </svg>
+        SF Quick Admin
+      </h1>
+      <p class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200" id="status-text">未接続</p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="flex space-x-6 mt-3" id="tabs">
+      <button class="text-sm font-bold text-blue-700 border-b-2 border-blue-600 pb-1 tab-btn cursor-pointer"
+        data-target="tab-objects">オブジェクト＆項目</button>
+      <button class="text-sm font-medium text-slate-500 pb-1 tab-btn hover:text-blue-600 transition cursor-pointer"
+        data-target="tab-soql">SOQL ランナー</button>
+      <button class="text-sm font-medium text-slate-500 pb-1 tab-btn hover:text-blue-600 transition cursor-pointer"
+        data-target="tab-er">簡易 ER図</button>
+    </nav>
+  </header>
+
+  <main class="flex-1 relative flex flex-col min-h-0">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay"
+      class="rounded-lg hidden absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+      <span class="text-sm text-blue-700 font-semibold" id="loading-text">データを読み込み中...</span>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Tab Content 1: Object Reference            -->
+    <!-- ========================================== -->
+    <div id="tab-objects" class="tab-content flex-1 flex flex-col min-h-0">
+
+      <!-- Controls -->
+      <div class="mb-3 bg-white p-3 rounded-lg shadow-sm border border-slate-200 flex items-start gap-3 flex-shrink-0">
+        <div class="flex-1 relative">
+          <label class="block text-xs font-bold text-slate-600 mb-1.5">対象のオブジェクトを検索して選択</label>
+          <input type="text" id="object-search" list="object-list" placeholder="API名 または 表示ラベル を入力..."
+            class="w-full border border-slate-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-slate-50 transition"
+            disabled>
+          <datalist id="object-list"></datalist>
+          <p class="text-[10px] text-slate-400 mt-1 absolute -bottom-4 left-0">Salesforce組織の全オブジェクト(<span
+              id="object-count">0</span>件)から検索できます。リストから選択すると自動で項目を取得します。</p>
+        </div>
+      </div>
+
+      <!-- Object Details & Fields Table -->
+      <div id="object-details-container"
+        class="hidden flex-1 bg-white rounded-lg shadow-sm border border-slate-200 flex flex-col min-h-0 relative">
+        <div
+          class="px-4 py-2 bg-slate-50 rounded-t-lg border-b border-slate-200 flex justify-between items-center flex-shrink-0">
+          <h2 id="current-object-name" class="font-bold text-sm text-slate-800 tracking-wide"></h2>
+          <div class="flex gap-2 items-center">
+            <!-- Field Search Input -->
+            <div class="relative mr-2">
+              <svg class="w-3.5 h-3.5 absolute left-2 top-1.5 text-slate-400" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              <input type="text" id="field-search" placeholder="項目を検索..."
+                class="pl-7 pr-3 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-[180px] bg-white transition">
+            </div>
+            <button id="btn-export-csv"
+              class="group flex items-center gap-1.5 text-xs bg-white border border-slate-300 text-slate-700 px-3 py-1 rounded hover:bg-slate-50 hover:text-blue-600 transition font-semibold shadow-sm">
+              <svg class="w-3.5 h-3.5 text-emerald-600 group-hover:text-blue-600" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z">
+                </path>
+              </svg>
+              CSVダウンロード
+            </button>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-auto bg-white rounded-b-lg">
+          <table class="w-full text-left text-xs border-collapse whitespace-nowrap">
+            <thead class="bg-slate-100 sticky top-0 z-10 shadow-sm">
+              <tr>
+                <th class="p-2 pl-4 font-bold text-slate-600 border-b border-slate-200">表示ラベル</th>
+                <th class="p-2 font-bold text-slate-600 border-b border-slate-200">API参照名</th>
+                <th class="p-2 font-bold text-slate-600 border-b border-slate-200">データ型</th>
+                <th class="p-2 font-bold text-slate-600 border-b border-slate-200 text-center w-16">必須</th>
+                <th class="p-2 font-bold text-slate-600 border-b border-slate-200 text-center w-16">カスタム</th>
+                <th class="p-2 pr-4 font-bold text-slate-600 border-b border-slate-200 text-center w-20">コピー</th>
+              </tr>
+            </thead>
+            <tbody id="fields-table-body" class="divide-y divide-slate-100">
+              <!-- Field rows will be inserted here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Prompt state before selection -->
+      <div id="empty-state"
+        class="flex-1 flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50">
+        <svg class="w-12 h-12 mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+          </path>
+        </svg>
+        <p class="text-sm font-medium">上の検索バーからオブジェクトを選択し、<br>「項目情報を取得」をクリックしてください。</p>
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Tab Content 2: SOQL Runner                 -->
+    <!-- ========================================== -->
+    <div id="tab-soql" class="tab-content hidden flex-1 flex min-h-0 gap-3">
+
+      <!-- Left Panel: Object & Field Selection (For Admins) -->
+      <div class="w-[260px] flex flex-col bg-white rounded-lg shadow-sm border border-slate-200 flex-shrink-0 min-h-0">
+        <div class="p-3 border-b border-slate-100 bg-slate-50 rounded-t-lg">
+          <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+              </path>
+            </svg>
+            クエリビルダー
+          </label>
+          <input type="text" id="soql-object-search" list="soql-object-list" placeholder="オブジェクトを選択..."
+            class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white transition mb-2">
+          <datalist id="soql-object-list"></datalist>
+
+          <div class="relative hidden" id="soql-field-search-container">
+            <svg class="w-3 h-3 absolute left-1.5 top-1.5 text-slate-400" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input type="text" id="soql-field-search" placeholder="項目をフィルタ..."
+              class="w-full pl-6 pr-2 py-1 text-[11px] border border-slate-200 rounded focus:outline-none focus:border-blue-400 bg-slate-50 transition">
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-2" id="soql-field-list-container">
+          <!-- Checkboxes will be injected here -->
+          <div class="h-full flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+            <p class="text-[10px]">オブジェクトを選択すると<br>項目が表示されます</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: SOQL Textarea & Results -->
+      <div class="flex-1 flex flex-col min-h-0 min-w-0">
+
+        <!-- SOQL Editor & Controls -->
+        <div class="mb-3 bg-white p-3 rounded-lg shadow-sm border border-slate-200 flex-shrink-0">
+          <label class="block text-xs font-bold text-slate-600 mb-1.5 flex justify-between">
+            <span>SOQL クエリ</span>
+            <select id="soql-history"
+              class="text-[10px] border border-slate-300 rounded px-1 max-w-[150px] bg-slate-50 cursor-pointer hidden">
+              <option value="">履歴から選択...</option>
+            </select>
+          </label>
+          <textarea id="soql-input" rows="3" placeholder="SELECT Id, Name FROM Account LIMIT 10"
+            class="w-full border border-slate-300 rounded-md px-3 py-2 text-xs font-mono focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-slate-50 mb-2 resize-none"></textarea>
+
+          <div class="flex justify-between items-center">
+            <p id="soql-error" class="text-[10px] text-red-600 font-semibold truncate flex-1 mr-2"></p>
+            <button id="btn-run-soql"
+              class="bg-blue-600 border border-blue-600 text-white px-5 py-1 rounded text-xs font-bold shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition whitespace-nowrap">
+              実行
+            </button>
+          </div>
+        </div>
+
+        <!-- SOQL Results Table -->
+        <div class="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 flex flex-col min-h-0 relative">
+          <div
+            class="px-3 py-2 bg-slate-50 rounded-t-lg border-b border-slate-200 flex justify-between items-center flex-shrink-0">
+            <h2 class="font-bold text-xs text-slate-800">実行結果 <span id="soql-result-count"
+                class="font-normal text-[10px] text-slate-500 ml-1"></span></h2>
+            <button id="btn-export-soql-csv"
+              class="hidden group flex items-center gap-1 text-[10px] bg-white border border-slate-300 text-slate-700 px-2 py-0.5 rounded hover:bg-slate-50 hover:text-blue-600 transition font-semibold shadow-sm">
+              <svg class="w-3 h-3 text-emerald-600 group-hover:text-blue-600" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z">
+                </path>
+              </svg>
+              CSV
+            </button>
+          </div>
+
+          <div class="flex-1 overflow-auto bg-white rounded-b-lg">
+            <table id="soql-table" class="w-full text-left text-[11px] border-collapse whitespace-nowrap hidden">
+              <thead id="soql-table-head" class="bg-slate-100 sticky top-0 z-10 shadow-sm">
+                <!-- Dynamically populated -->
+              </thead>
+              <tbody id="soql-table-body" class="divide-y divide-slate-100 font-mono text-[10px] text-slate-700">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+
+            <div id="soql-empty-state"
+              class="h-full flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+              <svg class="w-8 h-8 mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+              </svg>
+              <p class="text-xs">項目を選択するか<br>クエリを入力して実行してください</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Tab Content 3: ER Generator                -->
+    <!-- ========================================== -->
+    <!-- ========================================== -->
+    <!-- Tab Content 3: ER Generator                -->
+    <!-- ========================================== -->
+    <div id="tab-er"
+      class="tab-content hidden flex-1 flex flex-col min-h-0 bg-white rounded-lg shadow-sm border border-slate-200">
+
+      <!-- ER Controls -->
+      <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 rounded-t-lg flex items-end gap-3 flex-shrink-0">
+        <div class="flex-1 relative">
+          <label class="block text-xs font-bold text-slate-600 mb-1">起点オブジェクトを指定して全画面で開く</label>
+          <input type="text" id="er-object-search" list="er-object-list" placeholder="ER図の中心にするオブジェクトを選択..."
+            class="w-full border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-400 bg-white transition">
+          <datalist id="er-object-list"></datalist>
+        </div>
+        <button id="btn-open-er-tab"
+          class="bg-indigo-600 border border-indigo-600 text-white px-5 py-1.5 rounded text-xs font-bold shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex flex-shrink-0 items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+          </svg>
+          別タブで描画
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-auto bg-slate-100 rounded-b-lg relative p-4 flex justify-center items-center">
+        <div class="flex flex-col items-center justify-center text-slate-400 h-full w-full">
+          <svg class="w-12 h-12 mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
+            </path>
+          </svg>
+          <p class="text-xs font-medium text-center">オブジェクトを選択してボタンをクリックしてください<br>新しいタブが開き、広々とオブジェクトの依存関係を確認できます。</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="api.js"></script>
+  <script src="popup.js"></script>
+</body>
+
+</html>

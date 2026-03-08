@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Salesforce Quick Admin",
+  "version": "1.0.0",
+  "description": "Salesforce管理者・開発者向けのクイック管理ツール",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Salesforce Quick Admin"
+  },
+  "permissions": [
+    "cookies",
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "*://*.force.com/*",
+    "*://*.salesforce.com/*"
+  ]
+}
