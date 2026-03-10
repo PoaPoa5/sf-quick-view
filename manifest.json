@@ -1,11 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "Salesforce Quick Admin",
+  "name": "__MSG_appName__",
   "version": "1.0.0",
-  "description": "Salesforce管理者・開発者向けのクイック管理ツール",
+  "description": "__MSG_appDesc__",
+  "default_locale": "en",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Salesforce Quick Admin"
+    "default_title": "__MSG_appName__"
+  },
+  "icons": {
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
   },
   "permissions": [
     "cookies",

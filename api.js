@@ -2,6 +2,20 @@
 // API & 認証処理 (Shared)
 // ==========================================
 
+// --- UI localization ---
+function localizeUI() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const msg = chrome.i18n.getMessage(el.getAttribute('data-i18n'));
+        if (msg) el.innerHTML = msg;
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const msg = chrome.i18n.getMessage(el.getAttribute('data-i18n-placeholder'));
+        if (msg) el.setAttribute('placeholder', msg);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', localizeUI);
+
 async function sfApiGet(path, sfInfo) {
     let info = sfInfo || window.currentSfInfo;
 
@@ -117,4 +131,40 @@ async function testSalesforceApi(sfInfo) {
         console.error('API Test Error:', error);
         return { success: false, status: 'Network Error', errorMsg: error.message, apiUrl };
     }
+}
+
+// --- Background Logic ---
+async function fetchBackgroundLogic(apiName) {
+    const info = window.currentSfInfo;
+    if (!info) throw new Error('Salesforce のセッション情報が見つかりません。');
+
+    const enc = encodeURIComponent;
+
+    // Queries (Tooling API and Data API)
+    const qTrigger = `SELECT Id, Name, Status, UsageIsBulk FROM ApexTrigger WHERE TableEnumOrId = '${apiName}'`;
+    // ValidationRule requires EntityDefinitionId for safe filtering
+    const qValidationSafe = `SELECT Id, ValidationName, Active, Description FROM ValidationRule WHERE EntityDefinitionId = '${apiName}'`;
+    const qWorkflow = `SELECT Id, Name, TableEnumOrId FROM WorkflowRule WHERE TableEnumOrId = '${apiName}'`;
+    const qFlow = `SELECT ApiName, ActiveVersionId, Label, TriggerType, ProcessType FROM FlowDefinitionView WHERE TriggerObjectOrEventId = '${apiName}'`;
+
+    // Execute fetches in parallel. Using Tooling API where needed.
+    const pTrigger = sfApiGet(`/services/data/v60.0/tooling/query?q=${enc(qTrigger)}`).catch(e => ({ records: [], error: e.message }));
+    const pValidation = sfApiGet(`/services/data/v60.0/tooling/query?q=${enc(qValidationSafe)}`).catch(e => ({ records: [], error: e.message }));
+    const pWorkflow = sfApiGet(`/services/data/v60.0/tooling/query?q=${enc(qWorkflow)}`).catch(e => ({ records: [], error: e.message }));
+    const pFlow = sfApiGet(`/services/data/v60.0/query?q=${enc(qFlow)}`).catch(e => ({ records: [], error: e.message }));
+
+    const [triggerRes, validationRes, workflowRes, flowRes] = await Promise.all([pTrigger, pValidation, pWorkflow, pFlow]);
+
+    return {
+        triggers: triggerRes.records || [],
+        validationRules: validationRes.records || [],
+        workflowRules: workflowRes.records || [],
+        flows: flowRes.records || [],
+        errors: {
+            trigger: triggerRes.error,
+            validation: validationRes.error,
+            workflow: workflowRes.error,
+            flow: flowRes.error
+        }
+    };
 }

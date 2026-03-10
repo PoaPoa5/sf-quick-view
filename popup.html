@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Salesforce Quick Admin</title>
+  <title>SF Peek</title>
   <link href="assets/output.css" rel="stylesheet">
 </head>
 
@@ -16,19 +16,24 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
         </svg>
-        SF Quick Admin
+        <span data-i18n="appName">SF Peek</span>
       </h1>
-      <p class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200" id="status-text">未接続</p>
+      <p class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200" id="status-text"
+        data-i18n="statusNotConnected">未接続</p>
     </div>
 
     <!-- Navigation Tabs -->
     <nav class="flex space-x-6 mt-3" id="tabs">
       <button class="text-sm font-bold text-blue-700 border-b-2 border-blue-600 pb-1 tab-btn cursor-pointer"
-        data-target="tab-objects">オブジェクト＆項目</button>
+        data-target="tab-objects" data-i18n="tabObjects">オブジェクト＆項目</button>
       <button class="text-sm font-medium text-slate-500 pb-1 tab-btn hover:text-blue-600 transition cursor-pointer"
-        data-target="tab-soql">SOQL ランナー</button>
+        data-target="tab-current" data-i18n="tabCurrent">全項目Viewer</button>
       <button class="text-sm font-medium text-slate-500 pb-1 tab-btn hover:text-blue-600 transition cursor-pointer"
-        data-target="tab-er">簡易 ER図</button>
+        data-target="tab-soql" data-i18n="tabSoql">SOQL</button>
+      <button class="text-sm font-medium text-slate-500 pb-1 tab-btn hover:text-blue-600 transition cursor-pointer"
+        data-target="tab-er" data-i18n="tabEr">簡易 ER図</button>
+      <button class="text-sm font-medium text-slate-500 pb-1 tab-btn hover:text-blue-600 transition cursor-pointer"
+        data-target="tab-background-logic" data-i18n="tabBackgroundLogic">裏側ロジック</button>
     </nav>
   </header>
 
@@ -38,7 +43,7 @@
     <div id="loading-overlay"
       class="rounded-lg hidden absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
-      <span class="text-sm text-blue-700 font-semibold" id="loading-text">データを読み込み中...</span>
+      <span class="text-sm text-blue-700 font-semibold" id="loading-text" data-i18n="loadingMsg">データを読み込み中...</span>
     </div>
 
     <!-- ========================================== -->
@@ -49,13 +54,13 @@
       <!-- Controls -->
       <div class="mb-3 bg-white p-3 rounded-lg shadow-sm border border-slate-200 flex items-start gap-3 flex-shrink-0">
         <div class="flex-1 relative">
-          <label class="block text-xs font-bold text-slate-600 mb-1.5">対象のオブジェクトを検索して選択</label>
-          <input type="text" id="object-search" list="object-list" placeholder="API名 または 表示ラベル を入力..."
+          <input type="text" id="object-search" list="object-list" data-i18n-placeholder="objectSearchPlaceholder"
+            placeholder="API名 または 表示ラベル を入力..."
             class="w-full border border-slate-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-slate-50 transition"
             disabled>
           <datalist id="object-list"></datalist>
-          <p class="text-[10px] text-slate-400 mt-1 absolute -bottom-4 left-0">Salesforce組織の全オブジェクト(<span
-              id="object-count">0</span>件)から検索できます。リストから選択すると自動で項目を取得します。</p>
+          <p class="text-[10px] text-slate-400 mt-1 absolute -bottom-4 left-0" data-i18n="objectSearchHelp">
+            Salesforce組織の全オブジェクトから検索できます。リストから選択すると自動で項目を取得します。</p>
         </div>
       </div>
 
@@ -73,7 +78,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
-              <input type="text" id="field-search" placeholder="項目を検索..."
+              <input type="text" id="field-search" data-i18n-placeholder="fieldSearchPlaceholder" placeholder="項目を検索..."
                 class="pl-7 pr-3 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-[180px] bg-white transition">
             </div>
             <button id="btn-export-csv"
@@ -84,7 +89,7 @@
                   d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z">
                 </path>
               </svg>
-              CSVダウンロード
+              <span data-i18n="btnExportCsv">CSVダウンロード</span>
             </button>
           </div>
         </div>
@@ -92,13 +97,13 @@
         <div class="flex-1 overflow-auto bg-white rounded-b-lg">
           <table class="w-full text-left text-xs border-collapse whitespace-nowrap">
             <thead class="bg-slate-100 sticky top-0 z-10 shadow-sm">
-              <tr>
-                <th class="p-2 pl-4 font-bold text-slate-600 border-b border-slate-200">表示ラベル</th>
-                <th class="p-2 font-bold text-slate-600 border-b border-slate-200">API参照名</th>
-                <th class="p-2 font-bold text-slate-600 border-b border-slate-200">データ型</th>
-                <th class="p-2 font-bold text-slate-600 border-b border-slate-200 text-center w-16">必須</th>
-                <th class="p-2 font-bold text-slate-600 border-b border-slate-200 text-center w-16">カスタム</th>
-                <th class="p-2 pr-4 font-bold text-slate-600 border-b border-slate-200 text-center w-20">コピー</th>
+              <th class="p-2 pl-4 font-bold text-slate-600 border-b border-slate-200" data-i18n="tableColLabel">表示ラベル
+              </th>
+              <th class="p-2 font-bold text-slate-600 border-b border-slate-200" data-i18n="tableColApiName">API参照名</th>
+              <th class="p-2 font-bold text-slate-600 border-b border-slate-200" data-i18n="tableColType">データ型</th>
+              <th class="p-2 font-bold text-slate-600 border-b border-slate-200 text-center w-16">Req</th>
+              <th class="p-2 font-bold text-slate-600 border-b border-slate-200 text-center w-16">Custom</th>
+              <th class="p-2 pr-4 font-bold text-slate-600 border-b border-slate-200 text-center w-20">Copy</th>
               </tr>
             </thead>
             <tbody id="fields-table-body" class="divide-y divide-slate-100">
@@ -116,7 +121,8 @@
             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
           </path>
         </svg>
-        <p class="text-sm font-medium">上の検索バーからオブジェクトを選択し、<br>「項目情報を取得」をクリックしてください。</p>
+        <p class="text-sm font-medium text-center" data-i18n="emptyStateMsg">
+          上の検索バーからオブジェクトを選択し、<br>「項目情報を取得」をクリックしてください。</p>
       </div>
 
     </div>
@@ -135,9 +141,10 @@
                 d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
               </path>
             </svg>
-            クエリビルダー
+            <span data-i18n="soqlBuilderLabel">クエリビルダー</span>
           </label>
-          <input type="text" id="soql-object-search" list="soql-object-list" placeholder="オブジェクトを選択..."
+          <input type="text" id="soql-object-search" list="soql-object-list"
+            data-i18n-placeholder="soqlObjectSelectPlaceholder" placeholder="オブジェクトを選択..."
             class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white transition mb-2">
           <datalist id="soql-object-list"></datalist>
 
@@ -147,7 +154,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
-            <input type="text" id="soql-field-search" placeholder="項目をフィルタ..."
+            <input type="text" id="soql-field-search" data-i18n-placeholder="soqlFieldFilterPlaceholder"
+              placeholder="項目をフィルタ..."
               class="w-full pl-6 pr-2 py-1 text-[11px] border border-slate-200 rounded focus:outline-none focus:border-blue-400 bg-slate-50 transition">
           </div>
         </div>
@@ -155,7 +163,7 @@
         <div class="flex-1 overflow-y-auto p-2" id="soql-field-list-container">
           <!-- Checkboxes will be injected here -->
           <div class="h-full flex flex-col items-center justify-center text-slate-400 p-4 text-center">
-            <p class="text-[10px]">オブジェクトを選択すると<br>項目が表示されます</p>
+            <p class="text-[10px]" data-i18n="soqlFieldHelp">オブジェクトを選択すると<br>項目が表示されます</p>
           </div>
         </div>
       </div>
@@ -166,10 +174,10 @@
         <!-- SOQL Editor & Controls -->
         <div class="mb-3 bg-white p-3 rounded-lg shadow-sm border border-slate-200 flex-shrink-0">
           <label class="block text-xs font-bold text-slate-600 mb-1.5 flex justify-between">
-            <span>SOQL クエリ</span>
+            <span data-i18n="soqlQueryTitle">SOQL クエリ</span>
             <select id="soql-history"
               class="text-[10px] border border-slate-300 rounded px-1 max-w-[150px] bg-slate-50 cursor-pointer hidden">
-              <option value="">履歴から選択...</option>
+              <option value="" data-i18n="soqlHistorySelect">履歴から選択...</option>
             </select>
           </label>
           <textarea id="soql-input" rows="3" placeholder="SELECT Id, Name FROM Account LIMIT 10"
@@ -177,7 +185,7 @@
 
           <div class="flex justify-between items-center">
             <p id="soql-error" class="text-[10px] text-red-600 font-semibold truncate flex-1 mr-2"></p>
-            <button id="btn-run-soql"
+            <button id="btn-run-soql" data-i18n="btnRunQuery"
               class="bg-blue-600 border border-blue-600 text-white px-5 py-1 rounded text-xs font-bold shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition whitespace-nowrap">
               実行
             </button>
@@ -188,8 +196,8 @@
         <div class="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 flex flex-col min-h-0 relative">
           <div
             class="px-3 py-2 bg-slate-50 rounded-t-lg border-b border-slate-200 flex justify-between items-center flex-shrink-0">
-            <h2 class="font-bold text-xs text-slate-800">実行結果 <span id="soql-result-count"
-                class="font-normal text-[10px] text-slate-500 ml-1"></span></h2>
+            <h2 class="font-bold text-xs text-slate-800"><span data-i18n="soqlResultTitle">実行結果</span> <span
+                id="soql-result-count" class="font-normal text-[10px] text-slate-500 ml-1"></span></h2>
             <button id="btn-export-soql-csv"
               class="hidden group flex items-center gap-1 text-[10px] bg-white border border-slate-300 text-slate-700 px-2 py-0.5 rounded hover:bg-slate-50 hover:text-blue-600 transition font-semibold shadow-sm">
               <svg class="w-3 h-3 text-emerald-600 group-hover:text-blue-600" fill="none" stroke="currentColor"
@@ -198,7 +206,7 @@
                   d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z">
                 </path>
               </svg>
-              CSV
+              <span data-i18n="btnExportCsv">CSV</span>
             </button>
           </div>
 
@@ -218,7 +226,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                   d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
               </svg>
-              <p class="text-xs">項目を選択するか<br>クエリを入力して実行してください</p>
+              <p class="text-xs" data-i18n="soqlEmptyState">項目を選択するか<br>クエリを入力して実行してください</p>
             </div>
           </div>
         </div>
@@ -230,17 +238,15 @@
     <!-- ========================================== -->
     <!-- Tab Content 3: ER Generator                -->
     <!-- ========================================== -->
-    <!-- ========================================== -->
-    <!-- Tab Content 3: ER Generator                -->
-    <!-- ========================================== -->
     <div id="tab-er"
       class="tab-content hidden flex-1 flex flex-col min-h-0 bg-white rounded-lg shadow-sm border border-slate-200">
 
       <!-- ER Controls -->
       <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 rounded-t-lg flex items-end gap-3 flex-shrink-0">
         <div class="flex-1 relative">
-          <label class="block text-xs font-bold text-slate-600 mb-1">起点オブジェクトを指定して全画面で開く</label>
-          <input type="text" id="er-object-search" list="er-object-list" placeholder="ER図の中心にするオブジェクトを選択..."
+          <label class="block text-xs font-bold text-slate-600 mb-1" data-i18n="erStartObject">起点オブジェクト</label>
+          <input type="text" id="er-object-search" list="er-object-list"
+            data-i18n-placeholder="erObjectSelectPlaceholder" placeholder="ER図の中心にするオブジェクトを選択..."
             class="w-full border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-400 bg-white transition">
           <datalist id="er-object-list"></datalist>
         </div>
@@ -250,7 +256,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
           </svg>
-          別タブで描画
+          <span data-i18n="btnDrawEr">描画する</span>
         </button>
       </div>
 
@@ -261,12 +267,165 @@
               d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
             </path>
           </svg>
-          <p class="text-xs font-medium text-center">オブジェクトを選択してボタンをクリックしてください<br>新しいタブが開き、広々とオブジェクトの依存関係を確認できます。</p>
+          <p class="text-xs font-medium text-center" data-i18n="erEmptyState">
+            オブジェクトを選択してボタンをクリックしてください<br>新しいタブが開き、広々とオブジェクトの依存関係を確認できます。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Tab Content 4: Current Record Viewer       -->
+    <!-- ========================================== -->
+    <div id="tab-current"
+      class="tab-content hidden flex-1 flex flex-col min-h-0 bg-white rounded-lg shadow-sm border border-slate-200">
+      <div
+        class="px-3 py-2 bg-slate-50 rounded-t-lg border-b border-slate-200 flex justify-between items-center flex-shrink-0">
+        <h2 id="current-record-title" class="font-bold text-xs text-slate-800" data-i18n="currentRecordTitle">レコードデータ
+        </h2>
+        <!-- Search Input -->
+        <div class="relative hidden" id="current-record-search-container">
+          <svg class="w-3.5 h-3.5 absolute left-2 top-1.5 text-slate-400" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <input type="text" id="current-record-search" data-i18n-placeholder="currentRecordSearch"
+            placeholder="名前/API/値で検索..."
+            class="pl-7 pr-3 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-[180px] bg-white transition">
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-auto bg-white rounded-b-lg relative">
+        <table id="current-record-table" class="w-full text-left text-[11px] border-collapse whitespace-nowrap">
+          <thead class="bg-slate-100 sticky top-0 z-10 shadow-sm">
+            <tr>
+              <th class="p-1.5 px-3 font-bold text-slate-600 border-b border-slate-200 w-1/4" data-i18n="tableColLabel">
+                項目名</th>
+              <th class="p-1.5 px-3 font-bold text-slate-600 border-b border-slate-200 w-1/4"
+                data-i18n="tableColApiName">API参照名</th>
+              <th class="p-1.5 px-3 font-bold text-slate-600 border-b border-slate-200 w-1/2" data-i18n="tableColValue">
+                値</th>
+            </tr>
+          </thead>
+          <tbody id="current-record-body" class="divide-y divide-slate-100 font-mono text-[10px] text-slate-700">
+          </tbody>
+        </table>
+
+        <div id="current-record-empty"
+          class="h-full flex flex-col items-center justify-center text-slate-400 p-4 text-center hidden">
+          <svg class="w-8 h-8 mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p class="text-xs" id="current-record-msg" data-i18n="currentRecordHelp">
+            Salesforceのレコード画面を開き、<br>再度拡張機能を起動してください。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Tab Content 5: Background Logic            -->
+    <!-- ========================================== -->
+    <div id="tab-background-logic"
+      class="tab-content hidden flex-1 flex flex-col min-h-0 bg-white rounded-lg shadow-sm border border-slate-200">
+      <div
+        class="px-3 py-2 bg-slate-50 rounded-t-lg border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+        <div class="w-1/2 relative">
+          <input type="text" id="bl-object-search" list="bl-object-list"
+            data-i18n-placeholder="blObjectSelectPlaceholder" placeholder="オブジェクトを選択..."
+            class="w-full border border-slate-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-400 bg-white transition">
+          <datalist id="bl-object-list"></datalist>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-auto bg-slate-50 relative p-3">
+        <div id="bl-empty-state"
+          class="h-full flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+          <svg class="w-8 h-8 mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+            </path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          <p class="text-xs" data-i18n="blEmptyState">オブジェクトを選択すると、関連する自動化ロジックが表示されます。</p>
+        </div>
+
+        <div id="bl-content" class="hidden flex flex-col gap-4 pb-4 w-full">
+          <!-- Trigger Section -->
+          <div class="bg-white rounded border border-slate-200 shadow-sm overflow-hidden">
+            <div
+              class="px-3 py-1.5 bg-slate-100 border-b border-slate-200 font-bold text-xs text-slate-700 flex justify-between items-center">
+              <span data-i18n="blApexTriggers">Apexトリガー</span>
+              <span id="bl-count-trigger"
+                class="bg-indigo-100 text-indigo-700 rounded-full px-2 py-0.5 text-[10px]">0</span>
+            </div>
+            <div id="bl-list-trigger" class="divide-y divide-slate-100"></div>
+          </div>
+
+          <!-- Validation Rules Section -->
+          <div class="bg-white rounded border border-slate-200 shadow-sm overflow-hidden">
+            <div
+              class="px-3 py-1.5 bg-slate-100 border-b border-slate-200 font-bold text-xs text-slate-700 flex justify-between items-center">
+              <span data-i18n="blValidationRules">入力規則</span>
+              <span id="bl-count-validation"
+                class="bg-indigo-100 text-indigo-700 rounded-full px-2 py-0.5 text-[10px]">0</span>
+            </div>
+            <div id="bl-list-validation" class="divide-y divide-slate-100"></div>
+          </div>
+
+          <!-- Workflow Rules Section -->
+          <div class="bg-white rounded border border-slate-200 shadow-sm overflow-hidden">
+            <div
+              class="px-3 py-1.5 bg-slate-100 border-b border-slate-200 font-bold text-xs text-slate-700 flex justify-between items-center">
+              <span data-i18n="blWorkflowRules">ワークフロールール</span>
+              <span id="bl-count-workflow"
+                class="bg-indigo-100 text-indigo-700 rounded-full px-2 py-0.5 text-[10px]">0</span>
+            </div>
+            <div id="bl-list-workflow" class="divide-y divide-slate-100"></div>
+          </div>
+
+          <!-- Flows Section -->
+          <div class="bg-white rounded border border-slate-200 shadow-sm overflow-hidden">
+            <div
+              class="px-3 py-1.5 bg-slate-100 border-b border-slate-200 font-bold text-xs text-slate-700 flex justify-between items-center">
+              <span data-i18n="blFlows">フロー (Record-Triggered)</span>
+              <span id="bl-count-flow"
+                class="bg-indigo-100 text-indigo-700 rounded-full px-2 py-0.5 text-[10px]">0</span>
+            </div>
+            <div id="bl-list-flow" class="divide-y divide-slate-100"></div>
+          </div>
         </div>
       </div>
     </div>
 
   </main>
+
+  <footer class="mt-3 pt-2 border-t border-slate-200 flex-shrink-0">
+    <div class="flex items-center gap-2 justify-center flex-wrap">
+      <button
+        class="shortcut-btn text-[10px] bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 text-slate-600 px-2 py-1 rounded shadow-sm transition"
+        data-url="/lightning/setup/ObjectManager/home" data-i18n="shortcutObjectManager">オブジェクト</button>
+      <button
+        class="shortcut-btn text-[10px] bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 text-slate-600 px-2 py-1 rounded shadow-sm transition"
+        data-url="/lightning/setup/ManageUsers/home" data-i18n="shortcutUsers">ユーザー</button>
+      <button
+        class="shortcut-btn text-[10px] bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 text-slate-600 px-2 py-1 rounded shadow-sm transition"
+        data-url="/lightning/setup/Flows/home" data-i18n="shortcutFlows">フロー</button>
+      <button
+        class="shortcut-btn text-[10px] bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 text-slate-600 px-2 py-1 rounded shadow-sm transition"
+        data-url="/lightning/setup/EnhancedProfiles/home" data-i18n="shortcutProfiles">プロファイル</button>
+      <button
+        class="shortcut-btn text-[10px] bg-slate-800 border border-slate-800 hover:bg-slate-700 text-white px-2 py-1 rounded shadow-sm transition flex items-center gap-1"
+        data-url="/apex/debug/DevConsole">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+        </svg>
+        <span data-i18n="shortcutDevConsole">開発者コンソール</span>
+      </button>
+    </div>
+  </footer>
 
   <script src="api.js"></script>
   <script src="popup.js"></script>

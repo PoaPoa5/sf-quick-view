@@ -3,22 +3,22 @@ let allObjects = [];
 let currentFields = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('SF Quick Admin 拡張機能がロードされました。');
+  console.log('SF Peek 拡張機能がロードされました。');
   const statusText = document.getElementById('status-text');
 
   try {
-    statusText.textContent = '接続中...';
+    statusText.textContent = chrome.i18n.getMessage('loadingMsg') || 'Connecting...';
     statusText.className = 'text-xs text-blue-500 font-bold bg-blue-50 px-2 py-1 rounded border border-blue-100';
 
     const sfInfo = await getSalesforceSession();
     if (sfInfo) {
-      statusText.textContent = `接続確認中...`;
+      statusText.textContent = chrome.i18n.getMessage('loadingMsg') || 'Verifying...';
 
       const testResult = await testSalesforceApi(sfInfo);
       if (testResult.success) {
         window.currentSfInfo = sfInfo;
         chrome.storage.local.set({ sfInfo: sfInfo });
-        statusText.textContent = `接続済み (${sfInfo.domain})`;
+        statusText.textContent = `${chrome.i18n.getMessage('statusConnected') || 'Connected'} (${sfInfo.domain})`;
         statusText.className = 'text-[10px] text-green-700 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-200';
         console.log('Salesforce API 接続成功');
 
@@ -27,19 +27,62 @@ document.addEventListener('DOMContentLoaded', async () => {
         await initObjectReference();
         initSoqlRunner();
         initErGenerator();
+        initCurrentRecordViewer();
+        initAdminShortcuts();
+        initBackgroundLogicViewer();
+
+        // --- 現在のページのオブジェクトを自動選択 ---
+        const pageObj = await getCurrentLightningObject();
+        if (pageObj) {
+          const matchedObj = allObjects.find(
+            o => o.name.toLowerCase() === pageObj.toLowerCase()
+          );
+          if (matchedObj) {
+            const apiName = matchedObj.name;
+
+            // 1. オブジェクト＆項目
+            const objSearch = document.getElementById('object-search');
+            if (objSearch && !objSearch.value) {
+              objSearch.value = apiName;
+              objSearch.dispatchEvent(new Event('input'));
+            }
+
+            // 2. SOQL クエリビルダー
+            const soqlObjSearch = document.getElementById('soql-object-search');
+            if (soqlObjSearch && !soqlObjSearch.value) {
+              soqlObjSearch.value = apiName;
+              soqlObjSearch.dispatchEvent(new Event('input'));
+            }
+
+            // 3. 簡易 ER図
+            const erObjSearch = document.getElementById('er-object-search');
+            if (erObjSearch && !erObjSearch.value) {
+              erObjSearch.value = apiName;
+            }
+
+            // 4. 関連ロジック
+            const blObjSearch = document.getElementById('bl-object-search');
+            if (blObjSearch && !blObjSearch.value) {
+              blObjSearch.value = apiName;
+              blObjSearch.dispatchEvent(new Event('input'));
+            }
+          }
+        }
 
       } else {
-        statusText.textContent = `APIエラー: ${testResult.status}`;
+        const errLabel = chrome.i18n.getMessage('statusError') || 'Error';
+        statusText.textContent = `${errLabel}: ${testResult.status}`;
         statusText.title = `URL: ${testResult.apiUrl} | MSG: ${testResult.errorMsg}`;
         statusText.className = 'text-[10px] text-red-600 font-bold bg-red-50 px-2 py-1 rounded border border-red-200 cursor-help';
         console.error('API Error Details:', testResult);
       }
     } else {
-      statusText.textContent = 'Salesforceの画面を開いてください';
+      statusText.textContent = chrome.i18n.getMessage('statusNotConnected') || 'Not Connected';
       statusText.className = 'text-[10px] text-slate-500 font-bold bg-slate-100 px-2 py-1 rounded border border-slate-200';
     }
   } catch (err) {
-    statusText.textContent = `エラー: ${err.message}`;
+    const errLabel = chrome.i18n.getMessage('statusError') || 'Error';
+    statusText.textContent = `${errLabel}: ${err.message}`;
     statusText.className = 'text-[10px] text-red-600 font-bold bg-red-50 px-2 py-1 rounded border border-red-200';
     console.error(err);
   }
@@ -80,11 +123,12 @@ function setupTabs() {
 // 機能1: オブジェクト＆項目リファレンス
 // ==========================================
 
-function showLoading(show, message = "読み込み中...") {
+function showLoading(show, message) {
+  const defaultMsg = chrome.i18n.getMessage('loadingMsg') || 'Loading...';
   const el = document.getElementById('loading-overlay');
   const txt = document.getElementById('loading-text');
   if (el && txt) {
-    txt.textContent = message;
+    txt.textContent = message || defaultMsg;
     if (show) el.classList.remove('hidden');
     else el.classList.add('hidden');
   }
@@ -94,11 +138,11 @@ async function initObjectReference() {
   const searchInput = document.getElementById('object-search');
   const countSpan = document.getElementById('object-count');
 
-  showLoading(true, "オブジェクト一覧を取得中...");
+  showLoading(true, chrome.i18n.getMessage('erLoadingObj') || 'Fetching objects...');
   try {
     const data = await sfApiGet(`/services/data/v60.0/sobjects`);
     allObjects = data.sobjects;
-    countSpan.textContent = allObjects.length;
+    if (countSpan) countSpan.textContent = allObjects.length;
 
     const dataList = document.getElementById('object-list');
     allObjects.forEach(obj => {
@@ -125,21 +169,21 @@ async function initObjectReference() {
 
   } catch (e) {
     console.error(e);
-    alert('オブジェクト一覧の取得に失敗しました。');
+    alert(chrome.i18n.getMessage('errorMsg') || 'Failed to fetch objects.');
   } finally {
     showLoading(false);
   }
 }
 
 async function fetchObjectFields(apiName) {
-  showLoading(true, "項目情報を取得中...");
+  showLoading(true, chrome.i18n.getMessage('loadingMsg') || 'Fetching fields...');
   try {
     const data = await sfApiGet(`/services/data/v60.0/sobjects/${apiName}/describe`);
     currentFields = data.fields;
 
     document.getElementById('empty-state').classList.add('hidden');
     document.getElementById('object-details-container').classList.remove('hidden');
-    document.getElementById('current-object-name').textContent = `${data.label} (${data.name}) の全項目`;
+    document.getElementById('current-object-name').textContent = `${data.label} (${data.name}) ${chrome.i18n.getMessage('allFieldsSuffix') || 'All Fields'}`;
 
     renderFieldsTable(currentFields);
 
@@ -153,7 +197,7 @@ async function fetchObjectFields(apiName) {
     fieldSearchInput.addEventListener('input', handleFieldSearch);
 
   } catch (e) {
-    alert(`項目の取得に失敗しました。\nAPI名「${apiName}」が正しいか確認してください。`);
+    alert((chrome.i18n.getMessage('errorMsg') || 'Failed to fetch fields.') + `\nAPI: ${apiName}`);
     console.error(e);
   } finally {
     showLoading(false);
@@ -179,7 +223,7 @@ function renderFieldsTable(fields) {
 
   if (fields.length === 0) {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="6" class="p-4 text-center text-slate-400 text-xs">項目が見つかりません</td>`;
+    tr.innerHTML = `<td colspan="6" class="p-4 text-center text-slate-400 text-xs">${chrome.i18n.getMessage('noMatchFound') || 'No items found'}</td>`;
     tbody.appendChild(tr);
     return;
   }
@@ -189,12 +233,12 @@ function renderFieldsTable(fields) {
     tr.className = 'hover:bg-blue-50 transition group';
 
     const requiredBadge = (!f.nillable || f.name === 'Id')
-      ? '<span class="px-1.5 py-0.5 rounded-sm bg-red-100 text-red-700 font-bold text-[10px]">必須</span>'
+      ? '<span class="px-1.5 py-0.5 rounded-sm bg-red-100 text-red-700 font-bold text-[10px]">Req</span>'
       : '';
 
     const customBadge = f.custom
-      ? '<span class="px-1.5 py-0.5 rounded-sm bg-purple-100 text-purple-700 font-bold text-[10px]">カスタム</span>'
-      : '<span class="text-slate-300 text-[10px]">標準</span>';
+      ? '<span class="px-1.5 py-0.5 rounded-sm bg-purple-100 text-purple-700 font-bold text-[10px]">Cstm</span>'
+      : '<span class="text-slate-300 text-[10px]">Std</span>';
 
     // データ型に長さやスケールを付与 (例: string(255), double(16,2))
     let typeStr = f.type;
@@ -247,7 +291,14 @@ function renderFieldsTable(fields) {
 }
 
 function exportToCsv(fields, objectName) {
-  const headers = ['表示ラベル', 'API参照名', 'データ型', '必須', 'カスタム項目', '参照先'];
+  const headers = [
+    chrome.i18n.getMessage('tableColLabel') || 'Label',
+    chrome.i18n.getMessage('tableColApiName') || 'API Name',
+    chrome.i18n.getMessage('tableColType') || 'Type',
+    chrome.i18n.getMessage('tableColReq') || 'Req',
+    chrome.i18n.getMessage('tableColCustom') || 'Custom',
+    chrome.i18n.getMessage('tableColRef') || 'Ref'
+  ];
   const rows = fields.map(f => {
     const isRequired = (!f.nillable || f.name === 'Id') ? 'Yes' : 'No';
     const isCustom = f.custom ? 'Yes' : 'No';
@@ -339,7 +390,7 @@ function initSoqlRunner() {
     if (!query) return;
 
     errorText.textContent = '';
-    showLoading(true, "SOQLを実行中...");
+    showLoading(true, chrome.i18n.getMessage('loadingMsg') || 'Running SOQL...');
 
     try {
       const encodedQuery = encodeURIComponent(query);
@@ -405,7 +456,7 @@ function initSoqlRunner() {
 
 // Builder用の項目取得
 async function fetchSoqlBuilderFields(apiName) {
-  showLoading(true, "クエリビルダ用項目を取得中...");
+  showLoading(true, chrome.i18n.getMessage('loadingMsg') || 'Fetching fields...');
   try {
     const data = await sfApiGet(`/services/data/v60.0/sobjects/${apiName}/describe`);
     soqlBuilderCurrentObject = data.name;
@@ -441,7 +492,8 @@ function renderSoqlBuilderFields(filterQuery) {
   });
 
   if (filtered.length === 0) {
-    container.innerHTML = '<p class="text-[10px] text-slate-400 text-center mt-2">項目が見つかりません</p>';
+    const msg = chrome.i18n.getMessage('noMatchFound') || 'No items found';
+    container.innerHTML = `<p class="text-[10px] text-slate-400 text-center mt-2">${msg}</p>`;
     return;
   }
 
@@ -520,7 +572,7 @@ function updateHistorySelect() {
   const select = document.getElementById('soql-history');
   if (soqlHistory.length > 0) {
     select.classList.remove('hidden');
-    select.innerHTML = '<option value="">履歴から選択...</option>';
+    select.innerHTML = `<option value="">${chrome.i18n.getMessage('soqlHistorySelect') || 'Select from history...'}</option>`;
     soqlHistory.forEach(q => {
       const opt = document.createElement('option');
       opt.value = q;
@@ -550,13 +602,16 @@ function renderSoqlResult(data) {
   thead.innerHTML = '';
   tbody.innerHTML = '';
 
-  countSpan.textContent = '(' + data.records.length + '件' + (data.done ? '' : ' - 一部のみ表示') + ')';
+  const rowsWord = chrome.i18n.getMessage('soqlResultRows') || ' rows';
+  const partialWord = chrome.i18n.getMessage('soqlResultPartial') || ' - Partial display';
+  countSpan.textContent = `(${data.records.length}${rowsWord}${data.done ? '' : partialWord})`;
 
   if (!data.records || data.records.length === 0) {
     emptyState.classList.remove('hidden');
     table.classList.add('hidden');
     btnExport.classList.add('hidden');
-    emptyState.innerHTML = '<p class="text-xs text-slate-400">クエリは成功しましたが、レコードが見つかりませんでした。</p>';
+    const msg = chrome.i18n.getMessage('noMatchFound') || 'Query successful, but no records found.';
+    emptyState.innerHTML = `<p class="text-xs text-slate-400">${msg}</p>`;
     return;
   }
 
@@ -672,17 +727,323 @@ function initErGenerator() {
     btnOpenErTab.addEventListener('click', () => {
       const selectedObj = erObjectSearch.value.trim();
       if (!selectedObj) {
-        alert('まずはオブジェクトを選択してください。');
+        alert(chrome.i18n.getMessage('erInvalidObj') || 'Please select an object first.');
         return;
       }
 
       const matched = allObjects.find(obj => obj.name === selectedObj || obj.label === selectedObj);
       if (!matched) {
-        alert('無効なオブジェクト名です。リストから選択してください。');
+        alert(chrome.i18n.getMessage('erInvalidObj') || 'Invalid object selection.');
         return;
       }
 
       chrome.tabs.create({ url: chrome.runtime.getURL(`er.html?obj=${matched.name}`) });
     });
   }
+}
+
+// ==========================================
+// 機能A: 現在レコードの全項目透過ビューア
+// ==========================================
+let currentRecordData = {}; // フィルタリング用にデータを保持
+let currentRecordLabels = {}; // 項目名マッピング保持
+
+async function initCurrentRecordViewer() {
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tabs || tabs.length === 0) return;
+
+  const tab = tabs[0];
+  const url = tab.url;
+  if (!url) return;
+
+  // 例: /lightning/r/Account/001xxxxxxxxxxxxAAA/view
+  const regex = /\/lightning\/r\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9]{15,18})/i;
+  const match = url.match(regex);
+
+  const table = document.getElementById('current-record-table');
+  const emptyState = document.getElementById('current-record-empty');
+  const emptyMsg = document.getElementById('current-record-msg');
+  const tbody = document.getElementById('current-record-body');
+  const title = document.getElementById('current-record-title');
+  const searchContainer = document.getElementById('current-record-search-container');
+  const searchInput = document.getElementById('current-record-search');
+
+  if (match) {
+    const objectName = match[1];
+    const recordId = match[2];
+
+    title.textContent = `${chrome.i18n.getMessage('currentRecordTitle') || 'Record Data'}: ${objectName} (${recordId})`;
+
+    showLoading(true, chrome.i18n.getMessage('loadingCurrentRecord') || 'Loading record info...');
+    try {
+      const data = await sfApiGet(`/services/data/v60.0/sobjects/${objectName}/${recordId}`);
+      currentRecordData = data; // 保存
+
+      // 項目名を取得するためにdescribeもコール
+      const describeData = await sfApiGet(`/services/data/v60.0/sobjects/${objectName}/describe`);
+      currentRecordLabels = {};
+      if (describeData && describeData.fields) {
+        describeData.fields.forEach(f => {
+          currentRecordLabels[f.name] = f.label;
+        });
+      }
+
+      // 初回描画
+      renderCurrentRecordTable(data, '');
+
+      emptyState.classList.add('hidden');
+      table.classList.remove('hidden');
+      searchContainer.classList.remove('hidden');
+
+      // 検索イベント
+      searchInput.value = '';
+      searchInput.removeEventListener('input', handleCurrentRecordSearch);
+      searchInput.addEventListener('input', handleCurrentRecordSearch);
+
+    } catch (e) {
+      console.error(e);
+      emptyState.classList.remove('hidden');
+      table.classList.add('hidden');
+      const errLabel = chrome.i18n.getMessage('errorMsg') || 'Failed to fetch data.';
+      emptyMsg.innerHTML = `${errLabel}<br><span class="text-red-500">${e.message}</span>`;
+    } finally {
+      showLoading(false);
+    }
+  } else {
+    // レコード画面ではない
+    emptyMsg.innerHTML = chrome.i18n.getMessage('currentRecordHelp') || 'Please open a Salesforce record detail page (Lightning) and launch the extension again.';
+    emptyState.classList.remove('hidden');
+    table.classList.add('hidden');
+    searchContainer.classList.add('hidden');
+  }
+}
+
+function handleCurrentRecordSearch(e) {
+  const query = e.target.value.toLowerCase();
+  renderCurrentRecordTable(currentRecordData, query);
+}
+
+function renderCurrentRecordTable(data, query) {
+  const tbody = document.getElementById('current-record-body');
+  tbody.innerHTML = '';
+
+  const keys = Object.keys(data).filter(k => k !== 'attributes').sort();
+
+  keys.forEach(k => {
+    let val = data[k];
+    if (typeof val === 'object' && val !== null) {
+      val = JSON.stringify(val);
+    }
+    const valStr = (val !== null && val !== undefined) ? String(val) : '';
+    const labelStr = currentRecordLabels[k] || '';
+
+    // フィルタリング
+    if (query) {
+      const kMatch = k.toLowerCase().includes(query);
+      const valMatch = valStr.toLowerCase().includes(query);
+      const lMatch = labelStr.toLowerCase().includes(query);
+      if (!kMatch && !valMatch && !lMatch) return; // どれにもマッチしなければスキップ
+    }
+
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-blue-50 transition border-b border-slate-100 last:border-0';
+
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'p-1.5 px-3 align-top font-bold text-slate-700 whitespace-normal break-all font-sans';
+    tdLabel.textContent = labelStr;
+
+    const tdKey = document.createElement('td');
+    tdKey.className = 'p-1.5 px-3 align-top font-bold text-blue-600 font-mono';
+    tdKey.textContent = k;
+
+    const tdVal = document.createElement('td');
+    tdVal.className = 'p-1.5 px-3 align-top whitespace-normal break-all';
+    tdVal.textContent = valStr;
+
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdKey);
+    tr.appendChild(tdVal);
+    tbody.appendChild(tr);
+  });
+
+  if (tbody.children.length === 0) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="3" class="p-4 text-center text-slate-400 text-xs">${chrome.i18n.getMessage('noMatchFound') || 'No matching items found'}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+// ==========================================
+// 機能B: 管理者向け 1クリック・ショートカット集
+// ==========================================
+function initAdminShortcuts() {
+  const buttons = document.querySelectorAll('.shortcut-btn');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const relUrl = e.currentTarget.dataset.url;
+      if (!relUrl || !window.currentSfInfo) return;
+
+      const fullUrl = `https://${window.currentSfInfo.domain}${relUrl}`;
+      chrome.tabs.create({ url: fullUrl });
+    });
+  });
+}
+
+// ==========================================
+// 機能共通: 現在のページのオブジェクトを取得
+// ==========================================
+async function getCurrentLightningObject() {
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tabs || tabs.length === 0) return null;
+  const url = tabs[0].url;
+  if (!url) return null;
+
+  // Record Page: /lightning/r/Account/...
+  let match = url.match(/\/lightning\/r\/([a-zA-Z0-9_]+)\//i);
+  if (match) return match[1];
+
+  // List View / Object Home: /lightning/o/Account/list
+  match = url.match(/\/lightning\/o\/([a-zA-Z0-9_]+)\//i);
+  if (match) return match[1];
+
+  return null;
+}
+
+// ==========================================
+// 機能5: バックグラウンドロジック Viewer
+// ==========================================
+function initBackgroundLogicViewer() {
+  const blObjectSearch = document.getElementById('bl-object-search');
+  const blObjectList = document.getElementById('bl-object-list');
+
+  if (allObjects && allObjects.length > 0 && blObjectList) {
+    blObjectList.innerHTML = '';
+    allObjects.forEach(obj => {
+      const option = document.createElement('option');
+      option.value = obj.name;
+      option.textContent = obj.label;
+      blObjectList.appendChild(option);
+    });
+  }
+
+  if (blObjectSearch) {
+    blObjectSearch.addEventListener('input', async (e) => {
+      const selectedApiName = e.target.value;
+      if (!selectedApiName) return;
+
+      const matched = allObjects.find(obj => obj.name === selectedApiName);
+      if (matched) {
+        await fetchAndRenderBackgroundLogic(matched.name);
+      }
+    });
+  }
+}
+
+async function fetchAndRenderBackgroundLogic(apiName) {
+  showLoading(true, chrome.i18n.getMessage('loadingMsg') || 'Loading...');
+  try {
+    const data = await fetchBackgroundLogic(apiName);
+
+    document.getElementById('bl-empty-state').classList.add('hidden');
+    document.getElementById('bl-content').classList.remove('hidden');
+
+    renderBlList('bl-list-trigger', 'bl-count-trigger', data.triggers, (item) => {
+      const isActive = item.Status === 'Active';
+      return {
+        title: item.Name,
+        subtitle: `UsageIsBulk: ${item.UsageIsBulk}`,
+        isActive: isActive,
+        link: `/lightning/setup/ApexTriggers/page?address=%2F${item.Id}`
+      };
+    });
+
+    renderBlList('bl-list-validation', 'bl-count-validation', data.validationRules, (item) => {
+      return {
+        title: item.ValidationName,
+        subtitle: item.Description || '',
+        isActive: item.Active,
+        link: `/lightning/setup/ObjectManager/${apiName}/ValidationRules/${item.Id}/view`
+      };
+    });
+
+    renderBlList('bl-list-workflow', 'bl-count-workflow', data.workflowRules, (item) => {
+      return {
+        title: item.Name,
+        subtitle: `Object: ${item.TableEnumOrId}`,
+        isActive: null,
+        link: `/lightning/setup/WorkflowRules/page?address=%2F${item.Id}`
+      };
+    });
+
+    renderBlList('bl-list-flow', 'bl-count-flow', data.flows, (item) => {
+      const versionId = item.ActiveVersionId || '';
+      return {
+        title: item.Label,
+        subtitle: `Type: ${item.TriggerType || item.ProcessType}`,
+        isActive: true,
+        link: versionId ? `/builder_platform_interaction/flowBuilder.app?flowId=${versionId}` : `/lightning/setup/Flows/home`
+      };
+    });
+
+  } catch (e) {
+    console.error(e);
+    alert((chrome.i18n.getMessage('blFetchError') || 'Error') + '\n' + e.message);
+  } finally {
+    showLoading(false);
+  }
+}
+
+function renderBlList(listId, countId, items, mapper) {
+  const container = document.getElementById(listId);
+  const countEl = document.getElementById(countId);
+  container.innerHTML = '';
+
+  if (!items) items = [];
+  countEl.textContent = items.length;
+
+  if (items.length === 0) {
+    container.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs">${chrome.i18n.getMessage('blNoData') || 'No data'}</div>`;
+    return;
+  }
+
+  items.forEach(item => {
+    const mapped = mapper(item);
+
+    let statusHtml = '';
+    if (mapped.isActive === true) {
+      statusHtml = `<span class="bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded text-[9px] whitespace-nowrap">${chrome.i18n.getMessage('blActive') || 'Active'}</span>`;
+    } else if (mapped.isActive === false) {
+      statusHtml = `<span class="bg-slate-100 text-slate-500 font-bold px-1.5 py-0.5 rounded text-[9px] whitespace-nowrap">${chrome.i18n.getMessage('blInactive') || 'Inactive'}</span>`;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'p-3 flex items-start justify-between hover:bg-slate-50 transition border-l-2 border-transparent hover:border-blue-500 group';
+
+    row.innerHTML = `
+      <div class="flex-1 min-w-0 pr-3">
+        <div class="flex items-center gap-2 mb-0.5">
+          <span class="text-xs font-bold text-slate-800 truncate" title="${mapped.title}">${mapped.title}</span>
+          ${statusHtml}
+        </div>
+        <div class="text-[10px] text-slate-500 truncate" title="${mapped.subtitle}">${mapped.subtitle}</div>
+      </div>
+      <div>
+        <a href="#" data-url="${mapped.link}" class="setup-link-btn opacity-0 group-hover:opacity-100 transition text-[10px] bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 text-slate-600 px-2 py-1 rounded shadow-sm flex items-center gap-1 shrink-0">
+          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          Open
+        </a>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+
+  container.querySelectorAll('.setup-link-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const urlPath = e.currentTarget.getAttribute('data-url');
+      if (urlPath && window.currentSfInfo) {
+        chrome.tabs.create({ url: `https://${window.currentSfInfo.domain}${urlPath}` });
+      }
+    });
+  });
 }

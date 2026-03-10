@@ -1,0 +1,241 @@
+{
+    "appName": {
+        "message": "SF Peek",
+        "description": "The name of the extension"
+    },
+    "appDesc": {
+        "message": "Salesforce管理者・開発者向けのクイック管理ツール",
+        "description": "The description of the extension"
+    },
+    "statusNotConnected": {
+        "message": "未接続"
+    },
+    "statusConnected": {
+        "message": "接続済み"
+    },
+    "statusError": {
+        "message": "エラー"
+    },
+    "tabObjects": {
+        "message": "オブジェクト＆項目"
+    },
+    "tabCurrent": {
+        "message": "全項目Viewer"
+    },
+    "tabSoql": {
+        "message": "SOQL"
+    },
+    "tabEr": {
+        "message": "簡易 ER図"
+    },
+    "objectSearchPlaceholder": {
+        "message": "API名 または 表示ラベル を入力..."
+    },
+    "objectSearchHelp": {
+        "message": "Salesforce組織の全オブジェクトから検索できます。リストから選択すると自動で項目を取得します。"
+    },
+    "emptyStateMsg": {
+        "message": "上の検索バーからオブジェクトを選択し、<br>「項目情報を取得」をクリックしてください。"
+    },
+    "btnFetch": {
+        "message": "項目情報を取得"
+    },
+    "tableColLabel": {
+        "message": "項目名"
+    },
+    "tableColApiName": {
+        "message": "API参照名"
+    },
+    "tableColType": {
+        "message": "データ型"
+    },
+    "tableColValue": {
+        "message": "値"
+    },
+    "currentRecordTitle": {
+        "message": "レコードデータ"
+    },
+    "currentRecordSearch": {
+        "message": "名前/API/値で検索..."
+    },
+    "currentRecordHelp": {
+        "message": "Salesforceのレコード詳細画面（Lightning）を開き、<br>再度拡張機能を起動してください。"
+    },
+    "soqlQueryTitle": {
+        "message": "クエリ入力"
+    },
+    "soqlDraftPlaceholder": {
+        "message": "SELECT Id, Name FROM Account LIMIT 10"
+    },
+    "btnRunQuery": {
+        "message": "実行"
+    },
+    "btnClearQuery": {
+        "message": "クリア"
+    },
+    "btnExportCsv": {
+        "message": "CSVエクスポート"
+    },
+    "soqlHistoryTitle": {
+        "message": "履歴"
+    },
+    "soqlHistoryClear": {
+        "message": "すべてクリア"
+    },
+    "soqlResultRows": {
+        "message": "件"
+    },
+    "adminShortcutsTitle": {
+        "message": "管理者ショートカット"
+    },
+    "shortcutObjectManager": {
+        "message": "オブジェクト"
+    },
+    "shortcutUsers": {
+        "message": "ユーザー"
+    },
+    "shortcutFlows": {
+        "message": "フロー"
+    },
+    "shortcutProfiles": {
+        "message": "プロファイル"
+    },
+    "shortcutDevConsole": {
+        "message": "開発者コンソール"
+    },
+    "loadingMsg": {
+        "message": "ロード中..."
+    },
+    "errorMsg": {
+        "message": "データの取得に失敗しました。"
+    },
+    "erTitle": {
+        "message": "SF Peek - 簡易 ER図"
+    },
+    "erStartObject": {
+        "message": "起点オブジェクト"
+    },
+    "btnDrawEr": {
+        "message": "描画する"
+    },
+    "erLegend": {
+        "message": "凡例"
+    },
+    "erMasterDetail": {
+        "message": "★ 主従関係"
+    },
+    "erLookup": {
+        "message": "➤ 参照関係"
+    },
+    "erChildren": {
+        "message": "関連リスト"
+    },
+    "erOthers": {
+        "message": "... 他 $1 件"
+    },
+    "btnZoomIn": {
+        "message": "拡大"
+    },
+    "btnZoomOut": {
+        "message": "縮小"
+    },
+    "btnFit": {
+        "message": "全体を表示"
+    },
+    "btnResetLayout": {
+        "message": "レイアウトをリセット"
+    },
+    "erLoadingObj": {
+        "message": "オブジェクト一覧を取得中..."
+    },
+    "erLoadingRel": {
+        "message": "関連情報を解析中..."
+    },
+    "erInvalidObj": {
+        "message": "無効なオブジェクト名です。リストから選択してください。"
+    },
+    "noMatchFound": {
+        "message": "一致する項目が見つかりません"
+    },
+    "fieldSearchPlaceholder": {
+        "message": "項目を検索..."
+    },
+    "soqlBuilderLabel": {
+        "message": "クエリビルダー"
+    },
+    "soqlObjectSelectPlaceholder": {
+        "message": "オブジェクトを選択..."
+    },
+    "soqlFieldFilterPlaceholder": {
+        "message": "項目をフィルタ..."
+    },
+    "soqlFieldHelp": {
+        "message": "オブジェクトを選択すると<br>項目が表示されます"
+    },
+    "soqlHistorySelect": {
+        "message": "履歴から選択..."
+    },
+    "soqlResultTitle": {
+        "message": "実行結果"
+    },
+    "soqlEmptyState": {
+        "message": "項目を選択するか<br>クエリを入力して実行してください"
+    },
+    "erObjectSelectPlaceholder": {
+        "message": "ER図の中心にするオブジェクトを選択..."
+    },
+    "erEmptyState": {
+        "message": "オブジェクトを選択してボタンをクリックしてください<br>新しいタブが開き、広々とオブジェクトの依存関係を確認できます。"
+    },
+    "allFieldsSuffix": {
+        "message": "の全項目"
+    },
+    "soqlResultPartial": {
+        "message": " - 一部のみ表示"
+    },
+    "tableColReq": {
+        "message": "必須"
+    },
+    "tableColCustom": {
+        "message": "カスタム項目"
+    },
+    "tableColRef": {
+        "message": "参照先"
+    },
+    "loadingCurrentRecord": {
+        "message": "レコード情報を取得中..."
+    },
+    "tabBackgroundLogic": {
+        "message": "関連ロジック"
+    },
+    "blObjectSelectPlaceholder": {
+        "message": "オブジェクトを選択..."
+    },
+    "blEmptyState": {
+        "message": "オブジェクトを選択すると、関連する自動化ロジックが表示されます。"
+    },
+    "blApexTriggers": {
+        "message": "Apexトリガー"
+    },
+    "blValidationRules": {
+        "message": "入力規則"
+    },
+    "blWorkflowRules": {
+        "message": "ワークフロールール"
+    },
+    "blFlows": {
+        "message": "フロー (Record-Triggered)"
+    },
+    "blNoData": {
+        "message": "設定なし"
+    },
+    "blFetchError": {
+        "message": "関連ロジックの取得に失敗しました。"
+    },
+    "blActive": {
+        "message": "有効"
+    },
+    "blInactive": {
+        "message": "無効"
+    }
+}

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>簡易 ER図 - Salesforce Quick Admin</title>
+    <title data-i18n="erTitle">SF Peek - 簡易 ER図</title>
     <link href="assets/output.css" rel="stylesheet">
     <style>
         * {
@@ -367,49 +367,50 @@
                     d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
                 </path>
             </svg>
-            <h1>Salesforce Quick Admin - 簡易 ER図</h1>
+            <h1 data-i18n="erTitle">SF Peek - 簡易 ER図</h1>
         </div>
         <div id="org-badge">
             <span class="dot-green"></span>
-            <span id="target-org-id">取得中...</span>
+            <span id="target-org-id" data-i18n="loadingMsg">取得中...</span>
         </div>
     </header>
 
     <div id="controls-bar">
         <div>
-            <label for="er-object-search">起点オブジェクト</label>
-            <input type="text" id="er-object-search" list="er-object-list" placeholder="API名 または 表示ラベル を入力...">
+            <label for="er-object-search" data-i18n="erStartObject">起点オブジェクト</label>
+            <input type="text" id="er-object-search" list="er-object-list"
+                data-i18n-placeholder="objectSearchPlaceholder" placeholder="API名 または 表示ラベル を入力...">
             <datalist id="er-object-list"></datalist>
         </div>
-        <button id="btn-draw">描画する</button>
+        <button id="btn-draw" data-i18n="btnDrawEr">描画する</button>
     </div>
 
     <!-- Legend -->
     <div id="legend">
-        <p>凡例</p>
+        <p data-i18n="erLegend">凡例</p>
         <div class="legend-row">
             <svg width="36" height="10">
                 <path d="M0,5 L30,5" stroke="#6366f1" stroke-width="2.5" />
                 <polygon points="30,2 36,5 30,8" fill="#6366f1" />
             </svg>
-            主従関係
+            <span data-i18n="erMasterDetail">★ 主従関係</span>
         </div>
         <div class="legend-row">
             <svg width="36" height="10">
                 <path d="M0,5 L30,5" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" />
                 <polygon points="30,2 36,5 30,8" fill="#94a3b8" />
             </svg>
-            参照関係
+            <span data-i18n="erLookup">➤ 参照関係</span>
         </div>
     </div>
 
     <!-- Zoom Controls -->
     <div id="zoom-controls">
-        <button id="btn-zoom-out" title="縮小">−</button>
+        <button id="btn-zoom-out" data-i18n="btnZoomOut" title="縮小">−</button>
         <button id="btn-zoom-label" style="pointer-events:none;">100%</button>
-        <button id="btn-zoom-in" title="拡大">+</button>
-        <button id="btn-fit" title="全体表示">全体</button>
-        <button id="btn-reset-layout" title="レイアウトリセット">↺</button>
+        <button id="btn-zoom-in" data-i18n="btnZoomIn" title="拡大">+</button>
+        <button id="btn-fit" data-i18n="btnFit" title="全体表示">全体表示</button>
+        <button id="btn-reset-layout" data-i18n="btnResetLayout" title="レイアウトリセット">↺</button>
     </div>
 
     <!-- Canvas -->
@@ -443,7 +444,7 @@
     <!-- Loading -->
     <div id="loading">
         <div class="spinner"></div>
-        <span id="loading-text">解析中...</span>
+        <span id="loading-text" data-i18n="loadingMsg">解析中...</span>
     </div>
 
     <script src="api.js"></script>

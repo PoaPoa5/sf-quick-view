@@ -1,0 +1,241 @@
+{
+    "appName": {
+        "message": "SF Peek",
+        "description": "The name of the extension"
+    },
+    "appDesc": {
+        "message": "A quick administration and inspection tool for Salesforce admins and developers.",
+        "description": "The description of the extension"
+    },
+    "statusNotConnected": {
+        "message": "Not Connected"
+    },
+    "statusConnected": {
+        "message": "Connected"
+    },
+    "statusError": {
+        "message": "Error"
+    },
+    "tabObjects": {
+        "message": "Objects & Fields"
+    },
+    "tabCurrent": {
+        "message": "Field Viewer"
+    },
+    "tabSoql": {
+        "message": "SOQL"
+    },
+    "tabEr": {
+        "message": "Mini ER Diagram"
+    },
+    "objectSearchPlaceholder": {
+        "message": "Search by API Name or Label..."
+    },
+    "objectSearchHelp": {
+        "message": "Search from all objects in your Salesforce org. Select from the list to automatically fetch fields."
+    },
+    "emptyStateMsg": {
+        "message": "Select an object from the search bar above and click 'Fetch Fields'."
+    },
+    "btnFetch": {
+        "message": "Fetch Fields"
+    },
+    "tableColLabel": {
+        "message": "Label"
+    },
+    "tableColApiName": {
+        "message": "API Name"
+    },
+    "tableColType": {
+        "message": "Type"
+    },
+    "tableColValue": {
+        "message": "Value"
+    },
+    "currentRecordTitle": {
+        "message": "Record Data"
+    },
+    "currentRecordSearch": {
+        "message": "Search Label/API/Value..."
+    },
+    "currentRecordHelp": {
+        "message": "Open a Salesforce record detail page (Lightning) and launch the extension again."
+    },
+    "soqlQueryTitle": {
+        "message": "SOQL Query"
+    },
+    "soqlDraftPlaceholder": {
+        "message": "SELECT Id, Name FROM Account LIMIT 10"
+    },
+    "btnRunQuery": {
+        "message": "Run Query"
+    },
+    "btnClearQuery": {
+        "message": "Clear"
+    },
+    "btnExportCsv": {
+        "message": "Export CSV"
+    },
+    "soqlHistoryTitle": {
+        "message": "History"
+    },
+    "soqlHistoryClear": {
+        "message": "Clear All"
+    },
+    "soqlResultRows": {
+        "message": "Rows"
+    },
+    "adminShortcutsTitle": {
+        "message": "Admin Shortcuts"
+    },
+    "shortcutObjectManager": {
+        "message": "Object Manager"
+    },
+    "shortcutUsers": {
+        "message": "Users"
+    },
+    "shortcutFlows": {
+        "message": "Flows"
+    },
+    "shortcutProfiles": {
+        "message": "Profiles"
+    },
+    "shortcutDevConsole": {
+        "message": "Dev Console"
+    },
+    "loadingMsg": {
+        "message": "Loading..."
+    },
+    "errorMsg": {
+        "message": "Failed to fetch data."
+    },
+    "erTitle": {
+        "message": "SF Peek - Mini ER Diagram"
+    },
+    "erStartObject": {
+        "message": "Start Object"
+    },
+    "btnDrawEr": {
+        "message": "Draw"
+    },
+    "erLegend": {
+        "message": "Legend"
+    },
+    "erMasterDetail": {
+        "message": "Master-Detail"
+    },
+    "erLookup": {
+        "message": "Lookup"
+    },
+    "erChildren": {
+        "message": "Related List"
+    },
+    "erOthers": {
+        "message": "... and $1 others"
+    },
+    "btnZoomIn": {
+        "message": "Zoom In"
+    },
+    "btnZoomOut": {
+        "message": "Zoom Out"
+    },
+    "btnFit": {
+        "message": "Fit All"
+    },
+    "btnResetLayout": {
+        "message": "Reset Layout"
+    },
+    "erLoadingObj": {
+        "message": "Fetching objects..."
+    },
+    "erLoadingRel": {
+        "message": "Analyzing relationships..."
+    },
+    "erInvalidObj": {
+        "message": "Invalid object name. Please select from the list."
+    },
+    "noMatchFound": {
+        "message": "No matching items found."
+    },
+    "fieldSearchPlaceholder": {
+        "message": "Search fields..."
+    },
+    "soqlBuilderLabel": {
+        "message": "Query Builder"
+    },
+    "soqlObjectSelectPlaceholder": {
+        "message": "Select an object..."
+    },
+    "soqlFieldFilterPlaceholder": {
+        "message": "Filter fields..."
+    },
+    "soqlFieldHelp": {
+        "message": "Select an object to<br>display its fields"
+    },
+    "soqlHistorySelect": {
+        "message": "Select from history..."
+    },
+    "soqlResultTitle": {
+        "message": "Query Results"
+    },
+    "soqlEmptyState": {
+        "message": "Select fields or<br>enter a query to run"
+    },
+    "erObjectSelectPlaceholder": {
+        "message": "Select an object for the ER diagram center..."
+    },
+    "erEmptyState": {
+        "message": "Select an object and click the button.<br>A new tab will open to display the relationships with ample space."
+    },
+    "allFieldsSuffix": {
+        "message": "All Fields"
+    },
+    "soqlResultPartial": {
+        "message": " - Partial display"
+    },
+    "tableColReq": {
+        "message": "Req"
+    },
+    "tableColCustom": {
+        "message": "Custom"
+    },
+    "tableColRef": {
+        "message": "Ref"
+    },
+    "loadingCurrentRecord": {
+        "message": "Loading record info..."
+    },
+    "tabBackgroundLogic": {
+        "message": "Background Logic"
+    },
+    "blObjectSelectPlaceholder": {
+        "message": "Select an object..."
+    },
+    "blEmptyState": {
+        "message": "Select an object to display related automation logic."
+    },
+    "blApexTriggers": {
+        "message": "Apex Triggers"
+    },
+    "blValidationRules": {
+        "message": "Validation Rules"
+    },
+    "blWorkflowRules": {
+        "message": "Workflow Rules"
+    },
+    "blFlows": {
+        "message": "Flows (Record-Triggered)"
+    },
+    "blNoData": {
+        "message": "No configurations found"
+    },
+    "blFetchError": {
+        "message": "Failed to fetch related logic."
+    },
+    "blActive": {
+        "message": "Active"
+    },
+    "blInactive": {
+        "message": "Inactive"
+    }
+}

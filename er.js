@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.storage.local.get(['sfInfo'], async (result) => {
         const sfInfo = result.sfInfo;
         if (!sfInfo) {
-            document.getElementById('target-org-id').textContent = '未認証';
+            document.getElementById('target-org-id').textContent = chrome.i18n.getMessage('statusNotConnected') || 'Not Connected';
             return;
         }
         window.currentSfInfo = sfInfo;
@@ -39,9 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setupZoomControls();
 });
 
-function showLoading(show, txt = '解析中...') {
+function showLoading(show, txt) {
     const el = document.getElementById('loading');
-    document.getElementById('loading-text').textContent = txt;
+    document.getElementById('loading-text').textContent = txt || chrome.i18n.getMessage('loadingMsg') || 'Loading...';
     el.style.display = show ? 'flex' : 'none';
 }
 
@@ -49,7 +49,7 @@ function showLoading(show, txt = '解析中...') {
 async function initObjectList() {
     const searchInput = document.getElementById('er-object-search');
     const dataList = document.getElementById('er-object-list');
-    showLoading(true, 'オブジェクト一覧を取得中...');
+    showLoading(true, chrome.i18n.getMessage('erLoadingObj') || 'Fetching objects...');
     try {
         const data = await sfApiGet('/services/data/v60.0/sobjects');
         allObjects = data.sobjects;
@@ -61,7 +61,7 @@ async function initObjectList() {
         });
     } catch (e) {
         console.error(e);
-        alert('初期化エラーが発生しました。');
+        alert(chrome.i18n.getMessage('errorMsg') || 'Initialization error.');
     } finally {
         showLoading(false);
     }
@@ -74,10 +74,10 @@ async function handleDraw() {
     if (!apiName) return;
     const matched = allObjects.find(o => o.name === apiName);
     if (!matched) {
-        alert('無効なオブジェクト名です。リストから選択してください。');
+        alert(chrome.i18n.getMessage('erInvalidObj') || 'Invalid object name.');
         return;
     }
-    showLoading(true, '関連情報を解析中...');
+    showLoading(true, chrome.i18n.getMessage('erLoadingRel') || 'Analyzing relationships...');
     try {
         const data = await sfApiGet(`/services/data/v60.0/sobjects/${apiName}/describe`);
         document.getElementById('empty-state').style.display = 'none';
@@ -114,7 +114,7 @@ async function handleDraw() {
         renderDiagram(layoutData);
     } catch (e) {
         console.error(e);
-        alert('オブジェクト情報の取得に失敗しました。');
+        alert(chrome.i18n.getMessage('errorMsg') || 'Failed to fetch object information.');
     } finally {
         showLoading(false);
     }
@@ -160,7 +160,7 @@ function renderDiagram(data) {
     const parentStartY = centerY - parentTotalH / 2;
     parents.forEach((p, i) => {
         const y = parentStartY + i * (NODE_H + V_GAP);
-        const label = p.isMasterDetail ? '★ 主従関係' : '➤ 参照関係';
+        const label = p.isMasterDetail ? (chrome.i18n.getMessage('erMasterDetail') || 'Master-Detail') : (chrome.i18n.getMessage('erLookup') || 'Lookup');
         const cls = p.isMasterDetail ? 'node-parent-md' : 'node-parent-ref';
         const el = createNodeEl(`parent-${i}`, p.targetObject, `API: ${p.fieldName}`, cls, label);
         el.dataset.lineFrom = `parent-${i}`;
@@ -173,7 +173,8 @@ function renderDiagram(data) {
     const childStartY = centerY - childTotalH / 2;
     displayChildren.forEach((c, i) => {
         const y = childStartY + i * (NODE_H + V_GAP);
-        const el = createNodeEl(`child-${i}`, c.childObject, `via: ${c.fieldName}`, 'node-child', '関連リスト');
+        const label = chrome.i18n.getMessage('erChildren') || 'Related List';
+        const el = createNodeEl(`child-${i}`, c.childObject, `via: ${c.fieldName}`, 'node-child', label);
         el.dataset.lineFrom = 'center';
         el.dataset.lineTo = `child-${i}`;
         el.dataset.lineType = 'dashed';
@@ -182,7 +183,8 @@ function renderDiagram(data) {
 
     if (children.length > 40) {
         const lastY = childStartY + 40 * (NODE_H + V_GAP);
-        const moreEl = createNodeEl('child-more', `... 他 ${children.length - 40} 件`, '', 'node-child', '');
+        const othersMsg = chrome.i18n.getMessage('erOthers', [String(children.length - 40)]) || `... and ${children.length - 40} others`;
+        const moreEl = createNodeEl('child-more', othersMsg, '', 'node-child', '');
         placeNode(moreEl, CHILD_X, Math.max(START_Y, lastY));
     }
 
@@ -429,8 +431,14 @@ function fitToScreen() {
     const scaleY = (areaH - padding * 2) / contentH;
     canvasScale = Math.max(0.1, Math.min(Math.min(scaleX, scaleY), 1));
 
-    canvasPanX = padding - minX * canvasScale;
-    canvasPanY = padding - minY * canvasScale;
+    // 中央に配置するためのオフセット計算
+    const scaledContentW = contentW * canvasScale;
+    const scaledContentH = contentH * canvasScale;
+    const offsetX = (areaW - scaledContentW) / 2;
+    const offsetY = (areaH - scaledContentH) / 2;
+
+    canvasPanX = offsetX - minX * canvasScale;
+    canvasPanY = offsetY - minY * canvasScale;
 
     applyCanvasTransform();
 }
