@@ -237,5 +237,71 @@
     },
     "blInactive": {
         "message": "Inactive"
+    },
+    "shortcutPermSets": {
+        "message": "Permission Sets"
+    },
+    "tabFiles": {
+        "message": "Files"
+    },
+    "filesEmptyState": {
+        "message": "File search and batch download<br>will open in a new tab for a wider view."
+    },
+    "btnOpenFilesSearch": {
+        "message": "Open File Search"
+    },
+    "filesTabTitle": {
+        "message": "Salesforce File Search - SF Peek"
+    },
+    "filesHeader": {
+        "message": "File Search & Download"
+    },
+    "fileKeywordLabel": {
+        "message": "File Name (Keyword)"
+    },
+    "fileKeywordPlaceholder": {
+        "message": "Enter keyword..."
+    },
+    "fileExtLabel": {
+        "message": "Extension Filter"
+    },
+    "fileExtAll": {
+        "message": "All"
+    },
+    "fileLimitLabel": {
+        "message": "Max Results"
+    },
+    "btnSearchFiles": {
+        "message": "Search"
+    },
+    "downloadingWait": {
+        "message": "Downloading & Zipping..."
+    },
+    "filesResultTitle": {
+        "message": "Search Results"
+    },
+    "btnDownloadZip": {
+        "message": "Batch Download (ZIP)"
+    },
+    "fileSelectedLimitWarn": {
+        "message": "* Max 50 files or 50MB total"
+    },
+    "thFileName": {
+        "message": "File Name"
+    },
+    "thFileExt": {
+        "message": "Extension"
+    },
+    "thFileSize": {
+        "message": "Size"
+    },
+    "thCreatedDate": {
+        "message": "Created Date"
+    },
+    "thCreatedBy": {
+        "message": "Created By"
+    },
+    "filesInitState": {
+        "message": "Specify search criteria and click Search."
     }
 }

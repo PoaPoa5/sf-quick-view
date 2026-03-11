@@ -168,3 +168,48 @@ async function fetchBackgroundLogic(apiName) {
         }
     };
 }
+
+// --- Files ---
+async function searchContentVersions(keyword, extension, limit = 50) {
+    let q = `SELECT Id, ContentDocumentId, Title, FileExtension, ContentSize, CreatedDate, CreatedBy.Name FROM ContentVersion WHERE IsLatest = true`;
+
+    if (keyword) {
+        q += ` AND Title LIKE '%${keyword}%'`;
+    }
+    if (extension) {
+        q += ` AND FileExtension = '${extension}'`;
+    }
+
+    q += ` ORDER BY CreatedDate DESC LIMIT ${limit}`;
+
+    const enc = encodeURIComponent(q);
+    const res = await sfApiGet(`/services/data/v60.0/query?q=${enc}`);
+    return res.records || [];
+}
+
+async function fetchFileBinary(contentVersionId) {
+    const info = window.currentSfInfo;
+    if (!info) {
+        const result = await chrome.storage.local.get(['sfInfo']);
+        if (result.sfInfo) {
+            window.currentSfInfo = result.sfInfo;
+        } else {
+            throw new Error('Salesforce のセッション情報が見つかりません。');
+        }
+    }
+
+    const apiUrl = `https://${window.currentSfInfo.domain}/services/data/v60.0/sobjects/ContentVersion/${contentVersionId}/VersionData`;
+    const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${window.currentSfInfo.sessionId}`
+        }
+    });
+
+    if (!response.ok) {
+        const txt = await response.text();
+        throw new Error(`HTTP Error fetching file: ${response.status} - ${txt}`);
+    }
+
+    return await response.blob();
+}

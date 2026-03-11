@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="filesTabTitle">Salesforce ファイル検索 - SF Peek</title>
+    <link href="assets/output.css" rel="stylesheet">
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans h-screen flex flex-col pt-4 overflow-hidden">
+
+    <!-- Header -->
+    <header class="px-6 mb-4 flex-shrink-0">
+        <div class="flex justify-between items-end border-b border-slate-200 pb-3">
+            <h1 class="text-2xl font-bold tracking-tight text-blue-700 flex items-center gap-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z">
+                    </path>
+                </svg>
+                <span data-i18n="filesHeader">ファイル検索＆ダウンロード</span>
+            </h1>
+            <p class="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200"
+                id="status-text" data-i18n="statusNotConnected">未接続</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col px-6 min-h-0 max-w-7xl w-full mx-auto relative pb-6 gap-4">
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay"
+            class="rounded-lg hidden absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-3"></div>
+            <span class="text-base text-blue-700 font-semibold" id="loading-text" data-i18n="loadingMsg">処理中...</span>
+        </div>
+
+        <!-- Search Controls -->
+        <div
+            class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-end gap-3 flex-shrink-0">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs font-bold text-slate-600 mb-1.5" data-i18n="fileKeywordLabel">ファイル名
+                    (キーワード)</label>
+                <div class="relative">
+                    <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input type="text" id="search-keyword" data-i18n-placeholder="fileKeywordPlaceholder"
+                        placeholder="検索キーワードを入力..."
+                        class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white transition">
+                </div>
+            </div>
+
+            <div class="w-48">
+                <label class="block text-xs font-bold text-slate-600 mb-1.5" data-i18n="fileExtLabel">拡張子フィルター</label>
+                <select id="search-ext"
+                    class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white cursor-pointer transition">
+                    <option value="" data-i18n="fileExtAll">すべて</option>
+                    <option value="pdf">PDF</option>
+                    <option value="png">PNG</option>
+                    <option value="jpg">JPG</option>
+                    <option value="csv">CSV</option>
+                    <option value="xlsx">Excel (xlsx)</option>
+                    <option value="docx">Word (docx)</option>
+                </select>
+            </div>
+
+            <div class="w-32">
+                <label class="block text-xs font-bold text-slate-600 mb-1.5" data-i18n="fileLimitLabel">最大取得件数</label>
+                <select id="search-limit"
+                    class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white cursor-pointer transition">
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                </select>
+            </div>
+
+            <button id="btn-search"
+                class="bg-blue-600 border border-blue-600 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2 h-[38px]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <span data-i18n="btnSearchFiles">検索</span>
+            </button>
+        </div>
+
+        <!-- Progress Bar (hidden by default) -->
+        <div id="download-progress-container"
+            class="hidden bg-white px-4 py-3 rounded-xl shadow-sm border border-slate-200 flex flex-col gap-2 flex-shrink-0">
+            <div class="flex justify-between items-center text-xs font-bold text-slate-700">
+                <span id="download-status-text" data-i18n="downloadingWait">ダウンロード＆ZIP圧縮中...</span>
+                <span id="download-progress-text">0 / 0</span>
+            </div>
+            <div class="w-full bg-slate-200 rounded-full h-2.5">
+                <div id="download-progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col flex-1 min-h-0">
+            <div
+                class="px-4 py-3 bg-slate-50 border-b border-slate-200 rounded-t-xl flex justify-between items-center flex-shrink-0">
+                <h2 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                    <span data-i18n="filesResultTitle">検索結果</span>
+                    <span id="result-count"
+                        class="bg-blue-100 text-blue-700 py-0.5 px-2 rounded-full text-xs font-semibold hidden">0件</span>
+                </h2>
+
+                <div class="flex items-center gap-3">
+                    <span id="selection-status" class="text-xs font-medium text-slate-500 hidden">
+                        <span id="selected-count">0</span>件選択中 (<span id="selected-size">0 KB</span>)
+                    </span>
+                    <button id="btn-download-zip"
+                        class="hidden bg-blue-600 border border-blue-600 text-white px-4 py-1.5 rounded-md text-sm font-bold shadow-sm hover:bg-blue-700 transition flex items-center gap-1.5 disabled:bg-slate-300 disabled:border-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        <span data-i18n="btnDownloadZip">一括ダウンロード (ZIP)</span>
+                    </button>
+                    <p id="limit-warning" class="text-xs text-red-600 font-bold hidden"
+                        data-i18n="fileSelectedLimitWarn">※最大50件 または 合計50MBまで</p>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-auto rounded-b-xl relative">
+                <table class="w-full text-left text-sm border-collapse whitespace-nowrap">
+                    <thead class="bg-slate-100 sticky top-0 z-10 shadow-sm border-b border-slate-200">
+                        <tr>
+                            <th class="p-3 pl-4 w-12 text-center">
+                                <input type="checkbox" id="check-all"
+                                    class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer disabled:opacity-50">
+                            </th>
+                            <th class="p-3 font-bold text-slate-600" data-i18n="thFileName">ファイル名</th>
+                            <th class="p-3 font-bold text-slate-600 w-24" data-i18n="thFileExt">拡張子</th>
+                            <th class="p-3 font-bold text-slate-600 w-32 text-right" data-i18n="thFileSize">サイズ</th>
+                            <th class="p-3 font-bold text-slate-600 w-40" data-i18n="thCreatedDate">作成日時</th>
+                            <th class="p-3 pr-4 font-bold text-slate-600 w-32" data-i18n="thCreatedBy">作成者</th>
+                            <th class="p-3 pr-4 w-12 text-center text-slate-600" title="Download">
+                                <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="files-table-body" class="divide-y divide-slate-100 text-slate-700">
+                        <!-- Content inserted purely via JS -->
+                    </tbody>
+                </table>
+                <div id="files-empty-state"
+                    class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-white">
+                    <svg class="w-12 h-12 mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <p class="text-sm font-medium text-center" data-i18n="filesInitState">
+                        検索条件を指定して「検索」をクリックしてください。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="lib/jszip.min.js"></script>
+    <script src="api.js"></script>
+    <script src="files.js"></script>
+</body>
+
+</html>

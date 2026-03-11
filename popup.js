@@ -740,6 +740,14 @@ function initErGenerator() {
       chrome.tabs.create({ url: chrome.runtime.getURL(`er.html?obj=${matched.name}`) });
     });
   }
+
+  // --- Files Tab Integration ---
+  const btnOpenFilesTab = document.getElementById('btn-open-files-tab');
+  if (btnOpenFilesTab) {
+    btnOpenFilesTab.addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('files.html') });
+    });
+  }
 }
 
 // ==========================================

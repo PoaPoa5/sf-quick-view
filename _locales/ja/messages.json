@@ -237,5 +237,71 @@
     },
     "blInactive": {
         "message": "無効"
+    },
+    "shortcutPermSets": {
+        "message": "権限セット"
+    },
+    "tabFiles": {
+        "message": "ファイル検索"
+    },
+    "filesEmptyState": {
+        "message": "ファイル検索・一括ダウンロードは<br>広い画面で行うため新しいタブで開きます。"
+    },
+    "btnOpenFilesSearch": {
+        "message": "ファイル検索を開く"
+    },
+    "filesTabTitle": {
+        "message": "Salesforce ファイル検索 - SF Peek"
+    },
+    "filesHeader": {
+        "message": "ファイル検索＆ダウンロード"
+    },
+    "fileKeywordLabel": {
+        "message": "ファイル名 (キーワード)"
+    },
+    "fileKeywordPlaceholder": {
+        "message": "検索キーワードを入力..."
+    },
+    "fileExtLabel": {
+        "message": "拡張子フィルター"
+    },
+    "fileExtAll": {
+        "message": "すべて"
+    },
+    "fileLimitLabel": {
+        "message": "最大取得件数"
+    },
+    "btnSearchFiles": {
+        "message": "検索"
+    },
+    "downloadingWait": {
+        "message": "ダウンロード＆ZIP圧縮中..."
+    },
+    "filesResultTitle": {
+        "message": "検索結果"
+    },
+    "btnDownloadZip": {
+        "message": "一括ダウンロード (ZIP)"
+    },
+    "fileSelectedLimitWarn": {
+        "message": "※最大50件 または 合計50MBまで"
+    },
+    "thFileName": {
+        "message": "ファイル名"
+    },
+    "thFileExt": {
+        "message": "拡張子"
+    },
+    "thFileSize": {
+        "message": "サイズ"
+    },
+    "thCreatedDate": {
+        "message": "作成日時"
+    },
+    "thCreatedBy": {
+        "message": "作成者"
+    },
+    "filesInitState": {
+        "message": "検索条件を指定して「検索」をクリックしてください。"
     }
 }
