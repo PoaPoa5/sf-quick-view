@@ -253,18 +253,42 @@ function renderFieldsTable(fields) {
       }
     }
 
-    tr.innerHTML = `
-      <td class="p-2 pl-4 py-2 truncate max-w-[150px]" title="${f.label}">${f.label}</td>
-      <td class="p-2 py-2 font-mono text-blue-600 font-medium">${f.name}</td>
-      <td class="p-2 py-2 text-slate-500 font-mono text-[11px] truncate max-w-[160px]" title="${typeStr}">${typeStr}</td>
-      <td class="p-2 py-2 text-center">${requiredBadge}</td>
-      <td class="p-2 py-2 text-center">${customBadge}</td>
-      <td class="p-2 pr-4 py-2 text-center">
-        <button class="bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 text-slate-600 px-2 py-1 rounded text-[10px] font-bold copy-btn transition shadow-sm w-[50px]" data-val="${f.name}">
-          Copy
-        </button>
-      </td>
-    `;
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'p-2 pl-4 py-2 truncate max-w-[150px]';
+    tdLabel.title = f.label;
+    tdLabel.textContent = f.label;
+
+    const tdName = document.createElement('td');
+    tdName.className = 'p-2 py-2 font-mono text-blue-600 font-medium';
+    tdName.textContent = f.name;
+
+    const tdType = document.createElement('td');
+    tdType.className = 'p-2 py-2 text-slate-500 font-mono text-[11px] truncate max-w-[160px]';
+    tdType.title = typeStr;
+    tdType.textContent = typeStr;
+
+    const tdReq = document.createElement('td');
+    tdReq.className = 'p-2 py-2 text-center';
+    tdReq.innerHTML = requiredBadge; // static HTML, no API data
+
+    const tdCustom = document.createElement('td');
+    tdCustom.className = 'p-2 py-2 text-center';
+    tdCustom.innerHTML = customBadge; // static HTML, no API data
+
+    const tdCopy = document.createElement('td');
+    tdCopy.className = 'p-2 pr-4 py-2 text-center';
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 text-slate-600 px-2 py-1 rounded text-[10px] font-bold copy-btn transition shadow-sm w-[50px]';
+    copyBtn.dataset.val = f.name;
+    copyBtn.textContent = 'Copy';
+    tdCopy.appendChild(copyBtn);
+
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdName);
+    tr.appendChild(tdType);
+    tr.appendChild(tdReq);
+    tr.appendChild(tdCustom);
+    tr.appendChild(tdCopy);
     tbody.appendChild(tr);
   });
 
@@ -518,10 +542,19 @@ function renderSoqlBuilderFields(filterQuery) {
 
     const textWrap = document.createElement('div');
     textWrap.className = 'flex flex-col flex-1 min-w-0';
-    textWrap.innerHTML = `
-      <span class="text-[11px] font-bold text-slate-700 truncate" title="${f.label}">${f.label}</span>
-      <span class="text-[9px] font-mono text-slate-500 truncate" title="${f.name}">${f.name}</span>
-    `;
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'text-[11px] font-bold text-slate-700 truncate';
+    labelSpan.title = f.label;
+    labelSpan.textContent = f.label;
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'text-[9px] font-mono text-slate-500 truncate';
+    nameSpan.title = f.name;
+    nameSpan.textContent = f.name;
+
+    textWrap.appendChild(labelSpan);
+    textWrap.appendChild(nameSpan);
 
     labelWrap.appendChild(cb);
     labelWrap.appendChild(textWrap);
@@ -813,13 +846,19 @@ async function initCurrentRecordViewer() {
       emptyState.classList.remove('hidden');
       table.classList.add('hidden');
       const errLabel = chrome.i18n.getMessage('errorMsg') || 'Failed to fetch data.';
-      emptyMsg.innerHTML = `${errLabel}<br><span class="text-red-500">${e.message}</span>`;
+      emptyMsg.textContent = '';
+      emptyMsg.appendChild(document.createTextNode(errLabel));
+      emptyMsg.appendChild(document.createElement('br'));
+      const errSpan = document.createElement('span');
+      errSpan.className = 'text-red-500';
+      errSpan.textContent = e.message;
+      emptyMsg.appendChild(errSpan);
     } finally {
       showLoading(false);
     }
   } else {
     // レコード画面ではない
-    emptyMsg.innerHTML = chrome.i18n.getMessage('currentRecordHelp') || 'Please open a Salesforce record detail page (Lightning) and launch the extension again.';
+    emptyMsg.textContent = chrome.i18n.getMessage('currentRecordHelp') || 'Open a Salesforce record detail page (Lightning) and launch the extension again.';
     emptyState.classList.remove('hidden');
     table.classList.add('hidden');
     searchContainer.classList.add('hidden');
@@ -974,15 +1013,6 @@ async function fetchAndRenderBackgroundLogic(apiName) {
       };
     });
 
-    renderBlList('bl-list-workflow', 'bl-count-workflow', data.workflowRules, (item) => {
-      return {
-        title: item.Name,
-        subtitle: `Object: ${item.TableEnumOrId}`,
-        isActive: null,
-        link: `/lightning/setup/WorkflowRules/page?address=%2F${item.Id}`
-      };
-    });
-
     renderBlList('bl-list-flow', 'bl-count-flow', data.flows, (item) => {
       const versionId = item.ActiveVersionId || '';
       return {
@@ -1027,21 +1057,42 @@ function renderBlList(listId, countId, items, mapper) {
     const row = document.createElement('div');
     row.className = 'p-3 flex items-start justify-between hover:bg-slate-50 transition border-l-2 border-transparent hover:border-blue-500 group';
 
-    row.innerHTML = `
-      <div class="flex-1 min-w-0 pr-3">
-        <div class="flex items-center gap-2 mb-0.5">
-          <span class="text-xs font-bold text-slate-800 truncate" title="${mapped.title}">${mapped.title}</span>
-          ${statusHtml}
-        </div>
-        <div class="text-[10px] text-slate-500 truncate" title="${mapped.subtitle}">${mapped.subtitle}</div>
-      </div>
-      <div>
-        <a href="#" data-url="${mapped.link}" class="setup-link-btn opacity-0 group-hover:opacity-100 transition text-[10px] bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 text-slate-600 px-2 py-1 rounded shadow-sm flex items-center gap-1 shrink-0">
-          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-          Open
-        </a>
-      </div>
-    `;
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'flex-1 min-w-0 pr-3';
+
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'flex items-center gap-2 mb-0.5';
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'text-xs font-bold text-slate-800 truncate';
+    titleSpan.title = mapped.title;
+    titleSpan.textContent = mapped.title;
+    headerDiv.appendChild(titleSpan);
+
+    if (statusHtml) {
+      const statusWrap = document.createElement('span');
+      statusWrap.innerHTML = statusHtml;
+      headerDiv.appendChild(statusWrap);
+    }
+
+    const subtitleDiv = document.createElement('div');
+    subtitleDiv.className = 'text-[10px] text-slate-500 truncate';
+    subtitleDiv.title = mapped.subtitle;
+    subtitleDiv.textContent = mapped.subtitle;
+
+    contentDiv.appendChild(headerDiv);
+    contentDiv.appendChild(subtitleDiv);
+
+    const actionDiv = document.createElement('div');
+    const linkBtn = document.createElement('a');
+    linkBtn.href = '#';
+    linkBtn.dataset.url = mapped.link;
+    linkBtn.className = 'setup-link-btn opacity-0 group-hover:opacity-100 transition text-[10px] bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 text-slate-600 px-2 py-1 rounded shadow-sm flex items-center gap-1 shrink-0';
+    linkBtn.innerHTML = `<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>Open`;
+    actionDiv.appendChild(linkBtn);
+
+    row.appendChild(contentDiv);
+    row.appendChild(actionDiv);
     container.appendChild(row);
   });
 

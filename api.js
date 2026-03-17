@@ -6,7 +6,7 @@
 function localizeUI() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const msg = chrome.i18n.getMessage(el.getAttribute('data-i18n'));
-        if (msg) el.innerHTML = msg;
+        if (msg) el.textContent = msg;
     });
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
         const msg = chrome.i18n.getMessage(el.getAttribute('data-i18n-placeholder'));
@@ -133,6 +133,11 @@ async function testSalesforceApi(sfInfo) {
     }
 }
 
+// --- SOQL escape helper ---
+function escapeSoql(str) {
+    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
 // --- Background Logic ---
 async function fetchBackgroundLogic(apiName) {
     const info = window.currentSfInfo;
@@ -141,29 +146,26 @@ async function fetchBackgroundLogic(apiName) {
     const enc = encodeURIComponent;
 
     // Queries (Tooling API and Data API)
-    const qTrigger = `SELECT Id, Name, Status, UsageIsBulk FROM ApexTrigger WHERE TableEnumOrId = '${apiName}'`;
+    const safeApiName = escapeSoql(apiName);
+    const qTrigger = `SELECT Id, Name, Status, UsageIsBulk FROM ApexTrigger WHERE TableEnumOrId = '${safeApiName}'`;
     // ValidationRule requires EntityDefinitionId for safe filtering
-    const qValidationSafe = `SELECT Id, ValidationName, Active, Description FROM ValidationRule WHERE EntityDefinitionId = '${apiName}'`;
-    const qWorkflow = `SELECT Id, Name, TableEnumOrId FROM WorkflowRule WHERE TableEnumOrId = '${apiName}'`;
-    const qFlow = `SELECT ApiName, ActiveVersionId, Label, TriggerType, ProcessType FROM FlowDefinitionView WHERE TriggerObjectOrEventId = '${apiName}'`;
+    const qValidationSafe = `SELECT Id, ValidationName, Active, Description FROM ValidationRule WHERE EntityDefinitionId = '${safeApiName}'`;
+    const qFlow = `SELECT ApiName, ActiveVersionId, Label, TriggerType, ProcessType FROM FlowDefinitionView WHERE TriggerObjectOrEventId = '${safeApiName}'`;
 
     // Execute fetches in parallel. Using Tooling API where needed.
     const pTrigger = sfApiGet(`/services/data/v60.0/tooling/query?q=${enc(qTrigger)}`).catch(e => ({ records: [], error: e.message }));
     const pValidation = sfApiGet(`/services/data/v60.0/tooling/query?q=${enc(qValidationSafe)}`).catch(e => ({ records: [], error: e.message }));
-    const pWorkflow = sfApiGet(`/services/data/v60.0/tooling/query?q=${enc(qWorkflow)}`).catch(e => ({ records: [], error: e.message }));
     const pFlow = sfApiGet(`/services/data/v60.0/query?q=${enc(qFlow)}`).catch(e => ({ records: [], error: e.message }));
 
-    const [triggerRes, validationRes, workflowRes, flowRes] = await Promise.all([pTrigger, pValidation, pWorkflow, pFlow]);
+    const [triggerRes, validationRes, flowRes] = await Promise.all([pTrigger, pValidation, pFlow]);
 
     return {
         triggers: triggerRes.records || [],
         validationRules: validationRes.records || [],
-        workflowRules: workflowRes.records || [],
         flows: flowRes.records || [],
         errors: {
             trigger: triggerRes.error,
             validation: validationRes.error,
-            workflow: workflowRes.error,
             flow: flowRes.error
         }
     };
@@ -174,10 +176,10 @@ async function searchContentVersions(keyword, extension, limit = 50) {
     let q = `SELECT Id, ContentDocumentId, Title, FileExtension, ContentSize, CreatedDate, CreatedBy.Name FROM ContentVersion WHERE IsLatest = true`;
 
     if (keyword) {
-        q += ` AND Title LIKE '%${keyword}%'`;
+        q += ` AND Title LIKE '%${escapeSoql(keyword)}%'`;
     }
     if (extension) {
-        q += ` AND FileExtension = '${extension}'`;
+        q += ` AND FileExtension = '${escapeSoql(extension)}'`;
     }
 
     q += ` ORDER BY CreatedDate DESC LIMIT ${limit}`;

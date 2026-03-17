@@ -21,5 +21,9 @@
   "host_permissions": [
     "*://*.force.com/*",
     "*://*.salesforce.com/*"
-  ]
+  ],
+  "homepage_url": "https://PoaPoa5.github.io/sf-quick-admin/",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }

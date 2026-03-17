@@ -202,11 +202,24 @@ function createNodeEl(id, name, api, cls, labelTop) {
     el.className = `node ${cls}`;
     el.id = `node-${id}`;
     el.dataset.nodeId = id;
-    el.innerHTML = `
-        ${labelTop ? `<div class="node-label-sm">${labelTop}</div>` : ''}
-        <div class="node-name" title="${name}">${name}</div>
-        ${api ? `<div class="node-api" title="${api}">${api}</div>` : ''}
-    `;
+    if (labelTop) {
+        const labelSmDiv = document.createElement('div');
+        labelSmDiv.className = 'node-label-sm';
+        labelSmDiv.textContent = labelTop;
+        el.appendChild(labelSmDiv);
+    }
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'node-name';
+    nameDiv.title = name;
+    nameDiv.textContent = name;
+    el.appendChild(nameDiv);
+    if (api) {
+        const apiDiv = document.createElement('div');
+        apiDiv.className = 'node-api';
+        apiDiv.title = api;
+        apiDiv.textContent = api;
+        el.appendChild(apiDiv);
+    }
     setupNodeDrag(el);
     document.getElementById('canvas-world').appendChild(el);
     return el;

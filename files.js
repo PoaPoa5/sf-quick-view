@@ -145,27 +145,68 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const ext = f.FileExtension ? f.FileExtension.toLowerCase() : 'unknown';
 
-            tr.innerHTML = `
-                <td class="p-3 pl-4 text-center">
-                    <input type="checkbox" class="file-checkbox w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer" data-index="${idx}">
-                </td>
-                <td class="p-3 font-medium text-blue-700 truncate max-w-xs" title="${f.Title}">
-                    <a href="https://${window.currentSfInfo.domain}/lightning/r/ContentDocument/${f.ContentDocumentId}/view" target="_blank" class="hover:underline hover:text-blue-800">${f.Title}</a>
-                </td>
-                <td class="p-3">
-                    <span class="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-xs text-slate-600 font-mono uppercase">${ext}</span>
-                </td>
-                <td class="p-3 text-right font-mono text-xs text-slate-500">${formatBytes(f.ContentSize)}</td>
-                <td class="p-3 text-xs text-slate-500">${formatDate(f.CreatedDate)}</td>
-                <td class="p-3 text-xs text-slate-500 truncate max-w-[150px]" title="${f.CreatedBy?.Name || '-'}">${f.CreatedBy?.Name || '-'}</td>
-                <td class="p-3 pr-4 text-center">
-                    <button class="text-slate-500 hover:text-blue-600 transition dl-single-btn disabled:opacity-50 disabled:cursor-not-allowed" data-index="${idx}" title="Download">
-                        <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                        </svg>
-                    </button>
-                </td>
-            `;
+            // td1: checkbox
+            const td1 = document.createElement('td');
+            td1.className = 'p-3 pl-4 text-center';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'file-checkbox w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer';
+            checkbox.dataset.index = idx;
+            td1.appendChild(checkbox);
+
+            // td2: file title with link
+            const td2 = document.createElement('td');
+            td2.className = 'p-3 font-medium text-blue-700 truncate max-w-xs';
+            td2.title = f.Title;
+            const a = document.createElement('a');
+            a.href = `https://${window.currentSfInfo.domain}/lightning/r/ContentDocument/${f.ContentDocumentId}/view`;
+            a.target = '_blank';
+            a.className = 'hover:underline hover:text-blue-800';
+            a.textContent = f.Title;
+            td2.appendChild(a);
+
+            // td3: extension badge
+            const td3 = document.createElement('td');
+            td3.className = 'p-3';
+            const extSpan = document.createElement('span');
+            extSpan.className = 'px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-xs text-slate-600 font-mono uppercase';
+            extSpan.textContent = ext;
+            td3.appendChild(extSpan);
+
+            // td4: file size
+            const td4 = document.createElement('td');
+            td4.className = 'p-3 text-right font-mono text-xs text-slate-500';
+            td4.textContent = formatBytes(f.ContentSize);
+
+            // td5: created date
+            const td5 = document.createElement('td');
+            td5.className = 'p-3 text-xs text-slate-500';
+            td5.textContent = formatDate(f.CreatedDate);
+
+            // td6: created by
+            const createdByName = f.CreatedBy?.Name || '-';
+            const td6 = document.createElement('td');
+            td6.className = 'p-3 text-xs text-slate-500 truncate max-w-[150px]';
+            td6.title = createdByName;
+            td6.textContent = createdByName;
+
+            // td7: download button (SVG is static — no dynamic values)
+            const td7 = document.createElement('td');
+            td7.className = 'p-3 pr-4 text-center';
+            const dlBtn = document.createElement('button');
+            dlBtn.className = 'text-slate-500 hover:text-blue-600 transition dl-single-btn disabled:opacity-50 disabled:cursor-not-allowed';
+            dlBtn.dataset.index = idx;
+            dlBtn.title = 'Download';
+            dlBtn.innerHTML = `<svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>`;
+            td7.appendChild(dlBtn);
+
+            tr.appendChild(td1);
+            tr.appendChild(td2);
+            tr.appendChild(td3);
+            tr.appendChild(td4);
+            tr.appendChild(td5);
+            tr.appendChild(td6);
+            tr.appendChild(td7);
             tableBody.appendChild(tr);
         });
 
