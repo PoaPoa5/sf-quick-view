@@ -8,22 +8,11 @@
     body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.7; color: #333; }
     h1 { font-size: 1.8rem; border-bottom: 2px solid #0070d2; padding-bottom: 8px; }
     h2 { font-size: 1.2rem; margin-top: 2rem; color: #0070d2; }
-    .lang-toggle { display: flex; gap: 12px; margin-bottom: 32px; }
-    .lang-toggle button { padding: 6px 18px; border: 1px solid #0070d2; background: #fff; color: #0070d2; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
-    .lang-toggle button.active { background: #0070d2; color: #fff; }
-    #content-ja { display: none; }
     footer { margin-top: 48px; font-size: 0.85rem; color: #888; border-top: 1px solid #eee; padding-top: 12px; }
   </style>
 </head>
 <body>
 
-<div class="lang-toggle">
-  <button id="btn-en" class="active" onclick="switchLang('en')">English</button>
-  <button id="btn-ja" onclick="switchLang('ja')">日本語</button>
-</div>
-
-<!-- English -->
-<div id="content-en" lang="en">
   <h1>Privacy Policy — SF Peek</h1>
   <p><strong>Effective date:</strong> 2026-03-16</p>
 
@@ -69,71 +58,10 @@
 
   <h2>Contact</h2>
   <p>Questions or concerns? Open an issue at <a href="https://github.com/PoaPoa5/sf-quick-view/issues">https://github.com/PoaPoa5/sf-quick-view/issues</a>.</p>
-</div>
-
-<!-- Japanese -->
-<div id="content-ja" lang="ja" style="display:none;">
-  <h1>プライバシーポリシー — SF Peek</h1>
-  <p><strong>発効日：</strong> 2026年3月16日</p>
-
-  <h2>概要</h2>
-  <p>SF Peek は、Salesforce 管理者・開発者向けの Chrome 拡張機能です。本拡張機能はブラウザ内でのみ動作し、ログイン済みの Salesforce サーバーとのみ通信します。個人情報の収集、外部サーバーへのデータ送信、アナリティクスやトラッキングは一切行いません。</p>
-
-  <h2>アクセスするデータ</h2>
-  <ul>
-    <li><strong>Salesforce セッション Cookie（<code>sid</code>）：</strong>API リクエストの認証に使用するため、ブラウザの Cookie ストアから読み取ります。この値は <code>*.salesforce.com</code> および <code>*.force.com</code> にのみ送信され、第三者サーバーには送信されません。</li>
-    <li><strong>アクティブタブの URL：</strong>現在開いている Salesforce レコードを自動検出し、オブジェクト名を事前入力するために使用します。URL はローカルで処理され、外部には送信されません。</li>
-  </ul>
-
-  <h2>ローカルに保存するデータ</h2>
-  <p>拡張機能はお使いのデバイスにのみ保存される <code>chrome.storage.local</code> を以下の目的で使用します：</p>
-  <ul>
-    <li>Salesforce ドメイン・セッションのメタデータ（ポップアップを開くたびに Cookie を再読み取りしないようにするため）</li>
-    <li>SOQL クエリの履歴（SOQL ランナータブ用）</li>
-  </ul>
-  <p>このデータはデバイスの外に出ることはなく、Chrome の「閲覧データを削除」または拡張機能のアンインストールによりいつでも削除できます。</p>
-
-  <h2>使用しているサードパーティライブラリ</h2>
-  <ul>
-    <li><strong>JSZip</strong>（MIT ライセンス）— ファイルダウンロード用の ZIP アーカイブ作成にブラウザ内で使用します。JSZip のサーバーにデータは送信されません。</li>
-    <li><strong>Tailwind CSS</strong> — ビルド時に拡張機能の CSS ファイルにコンパイルされます。実行時に CDN へのリクエストは発生しません。</li>
-  </ul>
-
-  <h2>外部との通信なし</h2>
-  <p>SF Peek は、現在ログインしている Salesforce 組織以外のサーバーへのリクエストを一切行いません。テレメトリ、クラッシュレポート、利用統計、広告ネットワークとの連携は一切ありません。</p>
-
-  <h2>権限の説明</h2>
-  <ul>
-    <li><strong><code>cookies</code></strong> — API 認証用に Salesforce の <code>sid</code> セッション Cookie を読み取るために必要です。</li>
-    <li><strong><code>storage</code></strong> — SOQL 履歴とセッションメタデータをローカルに保存するために必要です。</li>
-    <li><strong><code>activeTab</code></strong> — 現在開いている Salesforce タブの URL を読み取り、レコード・オブジェクトのコンテキストを自動検出するために必要です。</li>
-    <li><strong>ホスト権限（<code>*.salesforce.com</code>、<code>*.force.com</code>）</strong> — ユーザーの組織の Salesforce REST API および Tooling API を呼び出すために必要です。</li>
-  </ul>
-
-  <h2>児童のプライバシー</h2>
-  <p>SF Peek は Salesforce のプロ向けの開発ツールであり、13歳未満の方のデータは意図的に収集していません。</p>
-
-  <h2>本ポリシーの変更</h2>
-  <p>本ポリシーを更新する場合は、この URL に新しいバージョンを公開します。ページ上部の発効日が変更を反映します。</p>
-
-  <h2>お問い合わせ</h2>
-  <p>ご質問・ご不明点は <a href="https://github.com/PoaPoa5/sf-quick-view/issues">https://github.com/PoaPoa5/sf-quick-view/issues</a> までお知らせください。</p>
-</div>
 
 <footer>
   SF Peek &nbsp;|&nbsp; <a href="https://github.com/PoaPoa5/sf-quick-view">GitHub</a>
 </footer>
 
-<script>
-  function switchLang(lang) {
-    document.getElementById('content-en').style.display = lang === 'en' ? '' : 'none';
-    document.getElementById('content-ja').style.display = lang === 'ja' ? '' : 'none';
-    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
-    document.getElementById('btn-ja').classList.toggle('active', lang === 'ja');
-  }
-
-  // Auto-switch based on browser language
-  if (navigator.language.startsWith('ja')) switchLang('ja');
-</script>
 </body>
 </html>
